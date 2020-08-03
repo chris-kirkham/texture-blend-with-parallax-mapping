@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System;
 
 /// <summary>
 /// 
 /// Adapted from https://codeartist.mx/dynamic-texture-painting/
 /// </summary>
-[ExecuteInEditMode]
 public class BlendPaintBrush
 {
     private BlendPaintCanvas canvas;
@@ -18,8 +18,9 @@ public class BlendPaintBrush
     public Texture2D brushTex;
     public Texture2D brushTexCopy; //use a copy of the brush texture when changing its colour to avoid overriding the original 
     public Color32 activeCol = Color.black;
-    public int brushSize;
-    public int halfBrushSize;
+    [SerializeField] public int brushSize;
+    [SerializeField] public int halfBrushSize;
+    [SerializeField] public float brushStrength;
 
     public int BrushSize { get; private set; }
     public int HalfBrushSize { get; private set; }
