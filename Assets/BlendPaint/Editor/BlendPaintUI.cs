@@ -7,7 +7,7 @@ using System;
 //[Serializable]
 public class BlendPaintUI : EditorWindow
 {
-    [SerializeField] private BlendPaintBrush brush; 
+    private BlendPaintBrush brush; 
     private GameObject selection; //selected object
     private Material selectionMaterial;
 
@@ -38,11 +38,12 @@ public class BlendPaintUI : EditorWindow
     {
         EditorWindow.GetWindow<BlendPaintUI>("Blend Painter");
     }
+
     void OnEnable()
     {
         SceneView.duringSceneGui += this.OnSceneGUI;
 
-        brush = new BlendPaintBrush();
+        brush = Resources.Load<BlendPaintBrush>("BlendPaint/Brushes/Brush ScriptableObjects/BlendPaintBrush");
         brush.LoadBrush();
         OnSelectionChange(); 
     }
@@ -108,25 +109,21 @@ public class BlendPaintUI : EditorWindow
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button(selectionMaterial.GetTexture("_BaseTex"), textureButtonParams))
             {
-                brush.activeCol = Color.black;
-                brush.SetBrushColour(brush.activeCol);
+                brush.SetBrushColour(Color.black);
             }
             if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex1"), textureButtonParams))
             {
-                brush.activeCol = Color.red;
-                brush.SetBrushColour(brush.activeCol);
+                brush.SetBrushColour(Color.red);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex2"), textureButtonParams))
             {
-                brush.activeCol = Color.green;
-                brush.SetBrushColour(brush.activeCol);
+                brush.SetBrushColour(Color.green);
             }
             if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex3"), textureButtonParams))
             {
-                brush.activeCol = Color.blue;
-                brush.SetBrushColour(brush.activeCol);
+                brush.SetBrushColour(Color.blue);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -134,21 +131,13 @@ public class BlendPaintUI : EditorWindow
 
             /* Brush parameters */
             //brush picker
-            EditorGUI.BeginChangeCheck();
-            brush.brushTex = (Texture2D)EditorGUILayout.ObjectField("Brush", brush.brushTex, typeof(Texture2D), true);
-            if (brush.brushTex != brush.brushTexCopy) Graphics.CopyTexture(brush.brushTex, brush.brushTexCopy);
+            brush.SetBrushTex((Texture2D)EditorGUILayout.ObjectField("Brush", brush.BrushTex, typeof(Texture2D), true));
 
             //brush size
-            EditorGUI.BeginChangeCheck();
-            brush.brushSize = EditorGUILayout.IntField("Brush size", brush.brushSize);
-            if (EditorGUI.EndChangeCheck())
-            {
-                if (brush.brushSize < 1) brush.brushSize = 1;
-                brush.halfBrushSize = brush.brushSize / 2;
-            }
-
+            brush.SetBrushSize(EditorGUILayout.IntField("Brush size", brush.BrushSize));
+            
             //brush strength
-            brush.brushStrength = EditorGUILayout.FloatField("Brush strength", brush.brushStrength);
+            brush.SetBrushStrength(EditorGUILayout.FloatField("Brush strength", brush.BrushStrength));
         }
     }
 
@@ -200,15 +189,15 @@ public class BlendPaintUI : EditorWindow
     {
         Vector2Int brushCentreTexel = new Vector2Int(Mathf.FloorToInt(uvPos.x * tex.width), Mathf.FloorToInt(uvPos.y * tex.height));
         
-        for(int x = brushCentreTexel.x - brush.halfBrushSize; x <= brushCentreTexel.x + brush.halfBrushSize; x++)
+        for(int x = brushCentreTexel.x - brush.HalfBrushSize; x <= brushCentreTexel.x + brush.HalfBrushSize; x++)
         {
-            for (int y = brushCentreTexel.y - brush.halfBrushSize; y <= brushCentreTexel.y + brush.halfBrushSize; y++)
+            for (int y = brushCentreTexel.y - brush.HalfBrushSize; y <= brushCentreTexel.y + brush.HalfBrushSize; y++)
             {
-                float opacity = 1 - (Vector2.Distance(new Vector2(x, y), brushCentreTexel) / brush.halfBrushSize);
-                Color brushCol = brush.activeCol;
+                float opacity = 1 - (Vector2.Distance(new Vector2(x, y), brushCentreTexel) / brush.HalfBrushSize);
+                Color brushCol = brush.ActiveCol;
                 brushCol.a = opacity;
 
-                Color col = Color.Lerp(tex.GetPixel(x, y), brushCol, brushCol.a * brush.brushStrength);
+                Color col = Color.Lerp(tex.GetPixel(x, y), brushCol, brushCol.a * brush.BrushStrength);
                 tex.SetPixel(x, y, col);
             }
         }
