@@ -32,7 +32,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
-        m_Texture: {fileID: 2800000, guid: 2b15b2de457038043a2a6a754d2de0df, type: 3}
+        m_Texture: {fileID: 2800000, guid: b9eec40ce9d3f1a43b36334a38f7aef8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:

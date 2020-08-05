@@ -48,12 +48,6 @@ Shader "Custom/BlendTextures_HRMA_1"
 		[IntRange] _OcclusionMaxSamples("Maximum samples", Range(2, 100)) = 20
 
 		[Header(Surface properties)]
-		/*
-		_BaseMetallic("Base tex metallic", Range(0,1)) = 0.0
-		_Tex1Metallic("Tex 1 metallic", Range(0,1)) = 0.0
-		_Tex2Metallic("Tex 2 metallic", Range(0,1)) = 0.0
-		_Tex3Metallic("Tex 3 metallic", Range(0,1)) = 0.0
-		*/
 		_AOStrength("AO strength", Range(0,1)) = 1.0
 
 			//[Header(Weather effects)]
@@ -65,13 +59,12 @@ Shader "Custom/BlendTextures_HRMA_1"
 			LOD 200
 
 			CGPROGRAM
+			#pragma once
 			#pragma surface surf Standard fullforwardshadows vertex:vert
-			//#pragma surface surf Standard fullforwardshadows
 			#pragma target 3.0 // Use shader model 3.0 target, to get nicer looking lighting
 			#pragma shader_feature _ _BLENDSOURCE_VERTEXCOLOURS 
 			#pragma shader_feature _PLXTYPE_OFFSET _PLXTYPE_ITERATIVEOFFSET _PLXTYPE_OCCLUSION 
 
-			#pragma once
 			#include "parallax.cginc"
 			//#include "blends.cginc"
 

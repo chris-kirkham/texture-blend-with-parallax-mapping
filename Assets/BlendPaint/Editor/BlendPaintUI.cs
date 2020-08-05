@@ -2,17 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System;
 
+//[Serializable]
 public class BlendPaintUI : EditorWindow
 {
-    //private Texture2D baseTex, tex1, tex2, tex3;
-    
-    /* BRUSH INFO */
-
-
-    private GameObject canvasObj;
-    private BlendPaintCanvas canvas; //component of canvasObj
-    private BlendPaintBrush brush; //component of canvasObj
+    [SerializeField] private BlendPaintBrush brush; 
     private GameObject selection; //selected object
     private Material selectionMaterial;
 
@@ -48,19 +43,13 @@ public class BlendPaintUI : EditorWindow
         SceneView.duringSceneGui += this.OnSceneGUI;
 
         brush = new BlendPaintBrush();
-
-        //create canvas (RenderTexture camera/texture quad) prefab and get 
-        //GameObject canvasObj = Instantiate((GameObject)Resources.Load("BlendPaint/Prefabs/Canvas"));
-        //canvas = canvasObj.GetComponent<BlendPaintCanvas>();
-
-        //need to call this after creating painter and canvas components, since it changes painter/canvas params
+        brush.LoadBrush();
         OnSelectionChange(); 
     }
 
     private void OnDisable()
     {
         SceneView.duringSceneGui -= this.OnSceneGUI;
-        DestroyImmediate(canvasObj);
     }
 
     void OnSelectionChange()
@@ -69,27 +58,35 @@ public class BlendPaintUI : EditorWindow
         //TODO: allow multiple selections if they all use the same textures?
         if(Selection.gameObjects.Length > 1)
         {
-            foreach (GameObject o in Selection.gameObjects)
+            foreach (GameObject obj in Selection.gameObjects)
             {
-                Material m = o.GetComponent<Renderer>().sharedMaterial;
-                if (IsPaintable(m))
+                Renderer r = obj.GetComponent<Renderer>();
+                if(r != null)
                 {
-                    selection = o;
-                    selectionMaterial = m;
-                    //canvas.SetSelection(o);
-                    break;
+                    Material m = r.sharedMaterial;
+                    if (IsPaintable(m))
+                    {
+                        selection = obj;
+                        selectionMaterial = m;
+                        break;
+                    }
                 }
+                
             }
         }
         else if(Selection.gameObjects.Length == 1)
         {
-            Material m = Selection.activeTransform.GetComponent<Renderer>().sharedMaterial;
-            if (IsPaintable(m))
+            Renderer r = Selection.activeTransform.GetComponent<Renderer>();
+            if(r != null)
             {
-                selection = Selection.activeTransform.gameObject;
-                selectionMaterial = m;
-                //canvas.SetSelection(Selection.activeTransform.gameObject);
+                Material m = r.sharedMaterial;
+                if (IsPaintable(m))
+                {
+                    selection = Selection.activeTransform.gameObject;
+                    selectionMaterial = m;
+                }
             }
+            
         }
 
         Repaint(); //need to repaint here or it doesn't update the UI immediately
@@ -101,73 +98,72 @@ public class BlendPaintUI : EditorWindow
         EditorGUIUtility.fieldWidth = 10;
         this.minSize = new Vector2(264, 512);
 
-        EditorGUILayout.LabelField("Texture selection");
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button(selectionMaterial.GetTexture("_BaseTex"), textureButtonParams)) //TODO: replace strings with texture images
+        if(selectionMaterial == null)
         {
-            brush.activeCol = Color.black;
-            brush.SetBrushColour(brush.activeCol);
+            EditorGUILayout.LabelField("No compatible object selected");
         }
-        if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex1"), textureButtonParams))
+        else
         {
-            brush.activeCol = Color.red;
-            brush.SetBrushColour(brush.activeCol);
-        }
-        EditorGUILayout.EndHorizontal();
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex2"), textureButtonParams))
-        {
-            brush.activeCol = Color.green;
-            brush.SetBrushColour(brush.activeCol);
-        }
-        if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex3"), textureButtonParams))
-        {
-            brush.activeCol = Color.blue;
-            brush.SetBrushColour(brush.activeCol);
-        }
-        EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField("Texture selection");
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button(selectionMaterial.GetTexture("_BaseTex"), textureButtonParams))
+            {
+                brush.activeCol = Color.black;
+                brush.SetBrushColour(brush.activeCol);
+            }
+            if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex1"), textureButtonParams))
+            {
+                brush.activeCol = Color.red;
+                brush.SetBrushColour(brush.activeCol);
+            }
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex2"), textureButtonParams))
+            {
+                brush.activeCol = Color.green;
+                brush.SetBrushColour(brush.activeCol);
+            }
+            if (GUILayout.Button(selectionMaterial.GetTexture("_MainTex3"), textureButtonParams))
+            {
+                brush.activeCol = Color.blue;
+                brush.SetBrushColour(brush.activeCol);
+            }
+            EditorGUILayout.EndHorizontal();
 
-        EditorGUILayout.Space();
+            EditorGUILayout.Space();
 
-        /* Brush parameters */
-        //brush picker
-        EditorGUI.BeginChangeCheck();
-        brush.brushTex = (Texture2D)EditorGUILayout.ObjectField("Brush", brush.brushTex, typeof(Texture2D), true);
-        if(brush.brushTex != brush.brushTexCopy) Graphics.CopyTexture(brush.brushTex, brush.brushTexCopy);
+            /* Brush parameters */
+            //brush picker
+            EditorGUI.BeginChangeCheck();
+            brush.brushTex = (Texture2D)EditorGUILayout.ObjectField("Brush", brush.brushTex, typeof(Texture2D), true);
+            if (brush.brushTex != brush.brushTexCopy) Graphics.CopyTexture(brush.brushTex, brush.brushTexCopy);
 
-        //brush size
-        EditorGUI.BeginChangeCheck();
-        brush.brushSize = EditorGUILayout.IntField("Brush size", brush.brushSize);
-        if(EditorGUI.EndChangeCheck())
-        {
-            if (brush.brushSize < 1) brush.brushSize = 1;
-            brush.halfBrushSize = brush.brushSize / 2;
+            //brush size
+            EditorGUI.BeginChangeCheck();
+            brush.brushSize = EditorGUILayout.IntField("Brush size", brush.brushSize);
+            if (EditorGUI.EndChangeCheck())
+            {
+                if (brush.brushSize < 1) brush.brushSize = 1;
+                brush.halfBrushSize = brush.brushSize / 2;
+            }
+
+            //brush strength
+            brush.brushStrength = EditorGUILayout.FloatField("Brush strength", brush.brushStrength);
         }
-
-        //brush strength
-        brush.brushStrength = EditorGUILayout.FloatField("Brush strength", brush.brushStrength);
     }
 
     void OnSceneGUI(SceneView sceneView)
     {
-        //https://docs.unity3d.com/ScriptReference/HandleUtility.GUIPointToWorldRay.html 
-        //get worldspace ray from mouse position on click event
-        if (Event.current.type == EventType.MouseDown)
-        {
-            Ray r = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-            //painter.SetUVPos(r);
-        }
-
         Event e = Event.current;
         if (e != null && e.keyCode == KeyCode.P)
         {
             Vector2 uvPos = Vector2.zero;
             if (TryGetUVPosFromCursorPos(ref uvPos))
             {
-                //canvas.AddPaintSprite(brush.BrushObj, uvPos, brush.brush.brushSize / 2);
-                DrawOnTex(uvPos, (Texture2D)selection.GetComponent<Renderer>().material.GetTexture("_BlendTex"));
+                DrawOnTex(uvPos, (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex"));
             }
         }
+
     }
 
     /*

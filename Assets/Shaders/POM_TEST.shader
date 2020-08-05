@@ -1,18 +1,5 @@
 ﻿Shader "Custom/POM_TEST" {
 	Properties{
-		/*
-		_Color("Color", Color) = (1,1,1,1)
-		_MainTex("Albedo (RGB)", 2D) = "white" {}
-		_BumpMap("Normal map (RGB)", 2D) = "bump" {}
-		_BumpScale("Bump scale", Range(0,1)) = 1
-		_ParallaxMap("Height map (R)", 2D) = "white" {}
-		_Parallax("Height scale", Range(0,1)) = 0.05
-		_Glossiness("Smoothness", Range(0,1)) = 0.5
-		_Metallic("Metallic", Range(0,1)) = 0.0
-		_ParallaxMinSamples("Parallax min samples", Range(2,100)) = 4
-		_ParallaxMaxSamples("Parallax max samples", Range(2,100)) = 20
-		*/
-
 		[Header(Colours)]
 		_Tex1Colour("Texture 1 colour", Color) = (1,1,1,1)
 		_Tex2Colour("Texture 2 colour", Color) = (1,1,1,1)
@@ -43,6 +30,7 @@
 
 		[Header(Blend parameters)]
 		[PowerSlider(3)] _HeightBlendFactor("Blend smoothness", Range(0.01, 1)) = 0.5
+		[KeywordEnum(BlendAll, AddToBase, AddAll)] _HeightBlendMode("Height blend mode", Float) = 0
 		_BaseTexHeightMult("Base heightmap intensity", Float) = 1
 		_H1Mult("Tex 1 heightmap intensity", Float) = 1
 		_H2Mult("Tex 2 heightmap intensity", Float) = 1
@@ -64,9 +52,10 @@
 
 			CGPROGRAM
 			#pragma surface surf Standard fullforwardshadows vertex:vert
-
 			#pragma target 3.0
 			#include "blends.cginc"
+
+			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL
 
 			struct Input {
 				float2 texcoord;
@@ -169,7 +158,16 @@
 					float h2 = tex2Dgrad(heightMaps[2], texcoord + vCurrOffset, dx, dy).r;
 					float h3 = tex2Dgrad(heightMaps[3], texcoord + vCurrOffset, dx, dy).r;
 					half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, tex2Dgrad(blendTex, texcoord + vCurrOffset, dx, dy), blendFactor);
-					fCurrSampledHeight = pomGetBlendedHeight(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
+					
+					//get blended height based on height blend mode
+					#if defined(_HEIGHTBLENDMODE_ADDTOBASE)
+						fCurrSampledHeight = pomGetBlendedHeightAddToBase(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
+					#elif defined(_HEIGHTBLENDMODE_ADDALL)
+						fCurrSampledHeight = pomGetBlendedHeightAddAll(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy).r;
+					#else //blend all
+						fCurrSampledHeight = pomGetBlendedHeight(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
+					#endif 
+					
 					if (fCurrSampledHeight > fCurrRayHeight)
 					{
 						float delta1 = fCurrSampledHeight - fCurrRayHeight;
@@ -223,7 +221,6 @@
 				float hmapMults[4] = { _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult };
 				half3 blendTex = tex2D(_BlendTex, IN.texcoord).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
-				//float blendedHeight = getBlendedHeight(hmaps, hmapMults, 4, uv, blendAmounts).r;
 
 				float2 offset = parallax_offset(_ParallaxAmt, IN.eye, IN.sampleRatio, IN.texcoord,
 				hmaps, hmapMults, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
