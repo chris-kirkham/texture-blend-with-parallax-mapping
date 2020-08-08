@@ -1,0 +1,17 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+#define NUMTHREADSXY 8
+float4 brushColour;
+uint brushHalfSize;
+float brushStrength;
+uint2 brushCentre;
+
+RWTexture2D<float4> Result;
+
+[numthreads(NUMTHREADSXY, NUMTHREADSXY, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    //get distance from brush centre; change tex colour based on brush distance/opacity (will only work for default soft round brush)
+    float opacity = 1 - distance(id.xy, brushCentre) / brushHalfSize;
+    Result[id.xy] = lerp(Result[id.xy], brushColour, opacity * saturate(brushStrength));
+}

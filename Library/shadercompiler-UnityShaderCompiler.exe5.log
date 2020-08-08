@@ -1,4 +1,12 @@
 Base path: 'C:/Program Files/Unity/Hub/Editor/2020.1.0f1/Editor/Data', plugins path 'C:/Program Files/Unity/Hub/Editor/2020.1.0f1/Editor/Data/PlaybackEngines'
 Cmd: initializeCompiler
+Cmd: compileComputeKernel
+  api=4 insize=463 outsize=465 ok=1
+Cmd: compileComputeKernel
+  error: 2 plat 4 at DrawOnTexSoftRoundBrushCompute.compute(7): syntax error: unexpected token 'uint2'
+  api=4 insize=635 outsize=0 ok=0
+Cmd: compileComputeKernel
+  error: 2 plat 4 at DrawOnTexSoftRoundBrushCompute.compute(11): the product of the arguments of numthreads(64,64,1) must be less than or equal to 1024
+  api=4 insize=636 outsize=0 ok=0
 
 Quitting shader compiler process
