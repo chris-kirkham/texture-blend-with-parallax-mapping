@@ -59,7 +59,7 @@ Shader "Custom/BlendTextures_HRMA_1"
 			LOD 200
 
 			CGPROGRAM
-			#pragma once
+			//#pragma once
 			#pragma surface surf Standard fullforwardshadows vertex:vert
 			#pragma target 3.0 // Use shader model 3.0 target, to get nicer looking lighting
 			#pragma shader_feature _ _BLENDSOURCE_VERTEXCOLOURS 
@@ -107,7 +107,7 @@ Shader "Custom/BlendTextures_HRMA_1"
 				// put more per-instance properties here
 			UNITY_INSTANCING_BUFFER_END(Props)
 
-			float getBlendedHeight
+			float getBlendedHeightBlendAll
 			(
 				float2 uv,
 				half3 blendAmounts
@@ -167,7 +167,7 @@ Shader "Custom/BlendTextures_HRMA_1"
 				#elif defined(_PLXTYPE_ITERATIVEOFFSET) //iterated offset mapping (just do offset mapping _Iterations more times)
 					for (int i = 0; i < _Iterations; i++)
 					{
-						blendedHeight = getBlendedHeight(uv, blendAmounts);
+						blendedHeight = getBlendedHeightBlendAll(uv, blendAmounts);
 						//float2 offset = ParallaxOffset(blendedHeight, _ParallaxAmt, IN.viewDir);
 						float2 offset = ParallaxOffsetLimited(blendedHeight, _ParallaxAmt, IN.tangentViewDir);
 						uv += offset;
@@ -205,31 +205,7 @@ Shader "Custom/BlendTextures_HRMA_1"
 				//o.Albedo = blendAmounts; //blend weights after heightmap blending
 				//o.Albedo = getColFromBlendAmounts(half4(hBase, rmaBase), half4(h1, rma1), half4(h2, rma2), half4(h3, rma3), blendAmounts); //HRMA maps
 				//o.Albedo = float3(ParallaxOffsetLimited(blendedHeight, _ParallaxAmt, mulWorldToTangent(IN, IN.viewDir)), 0); //custom parallax offset
-				
-				/*
-				float minLayers = 10;
-				float maxLayers = 20;
-				//float numLayers = lerp(maxLayers, minLayers, abs(dot(float3(0, 0, 1), IN.tangentViewDir))); //should this be (0, 1, 0)?
-				float numLayers = maxLayers;
-
-				float layerHeight = 1 / numLayers;
-				float currLayerHeight = 0;
-				float2 offsetPerLayer = _ParallaxAmt * IN.tangentViewDir.xy / IN.tangentViewDir.z / numLayers;
-				float2 currUV = uv; //current texture coordinates
-				float currHeightmapHeight = getBlendedHeight(currUV, blendAmounts);
-
-				//while point is above the surface
-				int iterations = 0;
-				while (currHeightmapHeight > currLayerHeight && iterations++ < numLayers)
-				{
-					currLayerHeight += layerHeight; //to the next layer
-					currUV += offsetPerLayer; //shift of texture coordinates
-					currHeightmapHeight = getBlendedHeight(currUV, blendAmounts); //new depth from heightmap
-				}
-
-				o.Albedo = currHeightmapHeight * 1.2;
-				*/
-				//o.Albedo = getBlendedHeight(uv, blendAmounts);
+				//o.Albedo = getBlendedHeightBlendAll(uv, blendAmounts);
 				
 				o.Albedo = getColFromBlendAmounts(cBase, c1, c2, c3, blendAmounts);
 				o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
@@ -241,9 +217,9 @@ Shader "Custom/BlendTextures_HRMA_1"
 				/*
 				float rainHeight = 0.25f;
 				half3 rain = float3(0, 0.5f, 0.5f);
-				o.Albedo = lerp(o.Albedo, rain, rainHeight > getBlendedHeight(uv, blendAmounts));
-				o.Normal = lerp(o.Normal, rain, rainHeight > getBlendedHeight(uv, blendAmounts));
-				o.Smoothness = lerp(o.Smoothness, 1, rainHeight > getBlendedHeight(uv, blendAmounts));
+				o.Albedo = lerp(o.Albedo, rain, rainHeight > getBlendedHeightBlendAll(uv, blendAmounts));
+				o.Normal = lerp(o.Normal, rain, rainHeight > getBlendedHeightBlendAll(uv, blendAmounts));
+				o.Smoothness = lerp(o.Smoothness, 1, rainHeight > getBlendedHeightBlendAll(uv, blendAmounts));
 				*/
 			}
 			ENDCG

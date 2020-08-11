@@ -1,6 +1,4 @@
 //blendFactor controls smoothness of blending between the two colours. The lower the number, the harder the falloff proportional to heights;
-// Upgrade NOTE: excluded shader from DX11, OpenGL ES 2.0 because it uses unsized arrays
-#pragma exclude_renderers d3d11 gles
 //0.001 is essentially a hard edge, with exclusively the higher colour making it through 
 half3 blend2Base(half3 cBase, float hBase, half3 c1, float h1, half3 blend, float blendFactor)
 {
@@ -162,12 +160,12 @@ half3 getColFromBlendAmounts(half3 cols[4], int numCols, half3 blendAmounts)
 	return c;
 }
 
-/*----getBlendedHeight/pomGetBlendedHeight----*/
-//getBlendedHeight - function to get blended height with calculated blend amounts and specified UV coordinate
-//pomGetBlendedHeight - gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
+/*----getBlendedHeightBlendAll/pomGetBlendedHeightBlendAll----*/
+//getBlendedHeightBlendAll - function to get blended height with calculated blend amounts and specified UV coordinate
+//pomGetBlendedHeightBlendAll - gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
 //error in POM etc. (see https://www.gamedev.net/forums/topic/621519-why-cant-i-use-tex2d-in-loop-with-hlsl/)
 
-float getBlendedHeight
+float getBlendedHeightBlendAll
 (
 	sampler2D heightmapBase, float baseHMult,
 	sampler2D heightmap1, float h1Mult,
@@ -185,7 +183,7 @@ float getBlendedHeight
 	return (hBase * bBase) + (h1 * blendAmounts.r) + (h2 * blendAmounts.g) + (h3 * blendAmounts.b);
 }
 
-float getBlendedHeight(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, half3 blendAmounts)
+float getBlendedHeightBlendAll(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, half3 blendAmounts)
 {
 	//initialise with base height
 	float blendedHeight = (tex2D(hmaps[0], uv).r * hmapMults[0]) * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
@@ -211,8 +209,21 @@ float getBlendedHeightAddToBase(sampler2D hmaps[4], float hmapMults[4], int numH
 	return blendedHeight;
 }
 
+float getBlendedHeightAddAll(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, half3 blendAmounts)
+{
+	//initialise with base height
+	float blendedHeight = (tex2D(hmaps[0], uv).r * hmapMults[0]);
+
+	for (int i = 1; i < numHmaps; i++)
+	{
+		blendedHeight += (tex2D(hmaps[i], uv).r * hmapMults[i]) * blendAmounts[i - 1];
+	}
+
+	return blendedHeight;
+}
+
 /*
-float pomGetBlendedHeight
+float pomGetBlendedHeightBlendAll
 (
 	sampler2D heightmapBase, float baseHMult,
 	sampler2D heightmap1, float h1Mult,
@@ -234,14 +245,14 @@ float pomGetBlendedHeight
 
 
 //gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
-float pomGetBlendedHeight(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, float dx, float dy, half3 blendAmounts)
+float pomGetBlendedHeightBlendAll(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, float dx, float dy, half3 blendAmounts)
 {
 	//initialise with base height
-	float blendedHeight = (tex2Dgrad(hmaps[0], uv, dx, dy).r * hmapMults[0]) * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
+	float blendedHeight = (tex2Dgrad(hmaps[0], uv, dx, dy).r * hmapMults[0]);
 	
 	for (int i = 1; i < numHmaps; i++)
 	{
-		blendedHeight += (tex2Dgrad(hmaps[i], uv, dx, dy).r * hmapMults[i]) * blendAmounts[i - 1];
+		blendedHeight += (tex2Dgrad(hmaps[i], uv, dx, dy).r * hmapMults[i]);
 	}
 
 	return blendedHeight;

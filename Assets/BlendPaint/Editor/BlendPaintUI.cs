@@ -223,7 +223,7 @@ namespace BlendPaint
                 if (TryGetUVPosFromCursorPos(ref uvPos))
                 {
                     //(Texture painting undo is recorded in DrawOnTex)
-                    DrawOnTex(uvPos, (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex"));
+                    DrawOnTex_Compute(uvPos, (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex"));
                 }
             }
 

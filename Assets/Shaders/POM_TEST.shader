@@ -53,13 +53,15 @@
 			CGPROGRAM
 			#pragma surface surf Standard fullforwardshadows vertex:vert
 			#pragma target 3.0
-			#include "blends.cginc"
+			//#include "blends.cginc" //don't include this here if it's included in parallax.cginc
+			#include "parallax.cginc"
 
-			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL
+			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL //height blend modes
+			#pragma shader_feature _PLXTYPE_OFFSET _PLXTYPE_ITERATIVEOFFSET _PLXTYPE_OCCLUSION //parallax offset methods
 
 			struct Input {
 				float2 texcoord;
-				float3 eye;
+				float3 tangentViewDir;
 				float sampleRatio;
 			};
 
@@ -81,17 +83,15 @@
 			float _Iterations;
 			int _OcclusionMinSamples, _OcclusionMaxSamples;
 
-
 			float4 _Tex1Colour, _Tex2Colour, _Tex3Colour, _Tex4Colour;
 			half _BaseMetallic, _Tex1Metallic, _Tex2Metallic, _Tex3Metallic;
 			half _AOStrength;
-
 
 			void parallax_vert(
 				float4 vertex,
 				float3 normal,
 				float4 tangent,
-				out float3 eye,
+				out float3 tangentViewDir,
 				out float sampleRatio
 			) {
 				float4x4 mW = unity_ObjectToWorld;
@@ -112,13 +112,41 @@
 
 				float3x3 worldToTangentSpace = transpose(tangentToWorldSpace);
 
-				eye = mul(E, worldToTangentSpace);
+				tangentViewDir = mul(E, worldToTangentSpace);
 				sampleRatio = 1 - dot(normalize(E), -normal);
 			}
 
-			float2 parallax_offset(
+			//returns blended height based on input maps and defined height blend mode
+			float GetBlendedHeight(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, half3 blendAmounts)
+			{
+				#if defined(_HEIGHTBLENDMODE_ADDTOBASE)
+					return getBlendedHeightAddToBase(hmaps, hmapMults, 4, uv, blendAmounts).r;
+				#elif defined(_HEIGHTBLENDMODE_ADDALL)
+					return getBlendedHeightAddAll(hmaps, hmapMults, 4, uv, blendAmounts).r;
+				#else //blend all
+					return getBlendedHeightBlendAll(hmaps, hmapMults, 4, uv, blendAmounts).r;
+				#endif 
+			}
+
+			/*----PARALLAX FUNCTIONS - MOVE TO A .CGINC WHEN DONE----*/
+
+			float2 IterativeParallaxOffset(float2 uv, half3 blendAmounts, sampler2D hmaps[4], float hmapMults[4], int numHmaps, uniform float parallaxAmt, uniform int iterations, float3 tangentViewDir)
+			{
+				float2 totalOffset = 0;
+				
+				for (int i = 0; i < iterations; i++)
+				{
+					float2 offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, numHmaps, uv, blendAmounts), parallaxAmt, tangentViewDir);
+					totalOffset += offset;
+					uv += offset;
+				}
+
+				return totalOffset;
+			}
+
+			float2 POM(
 				float fHeightMapScale,
-				float3 eye,
+				float3 tangentViewDir,
 				float sampleRatio,
 				float2 texcoord,
 				sampler2D heightMaps[4],
@@ -129,10 +157,10 @@
 				int nMaxSamples
 			) {
 
-				float fParallaxLimit = -length(eye.xy) / eye.z;
+				float fParallaxLimit = -length(tangentViewDir.xy) / tangentViewDir.z;
 				fParallaxLimit *= fHeightMapScale;
 
-				float2 vOffsetDir = normalize(eye.xy);
+				float2 vOffsetDir = normalize(tangentViewDir.xy);
 				float2 vMaxOffset = vOffsetDir * fParallaxLimit;
 
 				int nNumSamples = (int)lerp(nMinSamples, nMaxSamples, saturate(sampleRatio));
@@ -165,7 +193,7 @@
 					#elif defined(_HEIGHTBLENDMODE_ADDALL)
 						fCurrSampledHeight = pomGetBlendedHeightAddAll(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy).r;
 					#else //blend all
-						fCurrSampledHeight = pomGetBlendedHeight(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
+						fCurrSampledHeight = pomGetBlendedHeightBlendAll(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
 					#endif 
 					
 					if (fCurrSampledHeight > fCurrRayHeight)
@@ -195,15 +223,17 @@
 				return vCurrOffset;
 			}
 
-			float calcShadow(float2 uv, float3 tangentLightDir, float sampleRatio, int minSamples, int maxSamples)
+			/*
+			float POMCalcShadow(float2 uv, float3 tangentLightDir, float sampleRatio, int minSamples, int maxSamples)
 			{
 				int numSamples = (int) lerp(minSamples, maxSamples, saturate(sampleRatio));
 				float stepSize = 1.0 / numSamples;
 
 			}
+			*/
 
 			void vert(inout appdata_full IN, out Input OUT) {
-				parallax_vert(IN.vertex, IN.normal, IN.tangent, OUT.eye, OUT.sampleRatio);
+				parallax_vert(IN.vertex, IN.normal, IN.tangent, OUT.tangentViewDir, OUT.sampleRatio);
 				OUT.texcoord = IN.texcoord;
 			}
 
@@ -222,9 +252,18 @@
 				half3 blendTex = tex2D(_BlendTex, IN.texcoord).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 
-				float2 offset = parallax_offset(_ParallaxAmt, IN.eye, IN.sampleRatio, IN.texcoord,
-				hmaps, hmapMults, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
-				uv = IN.texcoord + offset;
+				/* get UV offset based on selected parallax method */
+				//get UV offset
+				float2 offset = float2(0, 0);
+				#if defined(_PLXTYPE_OFFSET)
+					offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, 4, uv, blendAmounts), _ParallaxAmt, IN.tangentViewDir);
+				#elif defined(_PLXTYPE_ITERATIVEOFFSET)
+					offset = IterativeParallaxOffset(uv, blendAmounts, hmaps, hmapMults, 4, _ParallaxAmt, _Iterations, IN.tangentViewDir);
+				#elif defined(_PLXTYPE_OCCLUSION)
+					offset = POM(_ParallaxAmt, IN.tangentViewDir, IN.sampleRatio, IN.texcoord,
+						hmaps, hmapMults, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
+				#endif
+				uv += offset;
 
 				//update blendAmounts with parallax-mapped uv coords
 				blendTex = tex2D(_BlendTex, uv).rgb;

@@ -127,7 +127,7 @@ Shader "Custom/BlendTextures_HRMA"
 			*/
 
 			//convenience function to get blended height with calculated blend amounts and specified UV coordinate (for iterative parallax/POM)
-			float getBlendedHeight(float2 uv, half3 blendAmounts)
+			float getBlendedHeightBlendAll(float2 uv, half3 blendAmounts)
 			{
 				float hBase = tex2D(_BaseTexHRMA, uv).r;
 				float h1 = tex2D(_Tex1HRMA, uv).r;
@@ -158,14 +158,14 @@ Shader "Custom/BlendTextures_HRMA"
 				{
 					currLayerHeight += layerHeight; //to the next layer
 					currUV -= offsetPerLayer; //shift of texture coordinates
-					currHeightmapHeight = getBlendedHeight(currUV, blendAmounts); //new depth from heightmap
+					currHeightmapHeight = getBlendedHeightBlendAll(currUV, blendAmounts); //new depth from heightmap
 				}
 
 				float2 prevUV = currUV + offsetPerLayer; //previous texture coordinates
 
 				//heights for linear interpolation
 				float nextH = currHeightmapHeight - currLayerHeight;
-				float prevH = getBlendedHeight(prevUV, blendAmounts) - currLayerHeight + layerHeight;
+				float prevH = getBlendedHeightBlendAll(prevUV, blendAmounts) - currLayerHeight + layerHeight;
 
 				float weight = nextH / (nextH - prevH); //proportions for linear interpolation
 				float2 finalTexCoords = prevUV * weight + currUV * (1.0 - weight); //interpolation of texture coordinates
@@ -210,7 +210,7 @@ Shader "Custom/BlendTextures_HRMA"
 				#elif defined(_PLXTYPE_ITERATIVEOFFSET) //iterated offset mapping (just do offset mapping _Iterations more times)
 					for (int i = 0; i < _Iterations; i++)
 					{
-						blendedHeight = getBlendedHeight(uv, blendAmounts);
+						blendedHeight = getBlendedHeightBlendAll(uv, blendAmounts);
 						float2 offset = ParallaxOffset(blendedHeight, _ParallaxAmt, IN.viewDir);
 						uv += offset;
 					}
