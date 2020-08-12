@@ -347,6 +347,7 @@ namespace BlendPaint
             //write result render texture to blend tex
             RenderTexture.active = result;
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            Undo.RegisterCompleteObjectUndo(tex, "Paint on blend texture");
             tex.Apply();
             Repaint();
         }
