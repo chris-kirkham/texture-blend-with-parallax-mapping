@@ -5,21 +5,18 @@ using UnityEditor;
 using System;
 using System.IO;
 using Unity.Jobs;
+using UnityEditor.SceneManagement;
 
 namespace BlendPaint
 {
     public class BlendPaintUI : EditorWindow
     {
-        private BlendPaintBrush brush;
+        private BlendBrush brush;
         private GameObject selection; //selected object
         private Material selectionMaterial;
         private BlendTexUtils texUtils = new BlendTexUtils();
 
-        private enum BrushMode { Normal, Add };
-        private BrushMode brushMode = BrushMode.Normal;
-
         ComputeShader drawOnTexCompute;
-        int drawOnTexKernelHandle;
 
         /* GUI LAYOUT PARAMETERS */
         private readonly GUILayoutOption[] textureButtonParams = new GUILayoutOption[]
@@ -76,9 +73,8 @@ namespace BlendPaint
             
             //init compute shader
             drawOnTexCompute = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/BlendPaint/Scripts/DrawOnTexSoftRoundBrushCompute.compute");
-            drawOnTexKernelHandle = drawOnTexCompute.FindKernel("DrawOnTex");
 
-            brush = Resources.Load<BlendPaintBrush>("BlendPaint/Brushes/Brush ScriptableObjects/BlendPaintBrush");
+            brush = Resources.Load<BlendBrush>("BlendPaint/Brushes/Brush ScriptableObjects/BlendPaintBrush");
             brush.LoadBrush();
             OnSelectionChange();
         }
@@ -201,13 +197,13 @@ namespace BlendPaint
                 brush.SetBrushTex((Texture2D)EditorGUILayout.ObjectField("Brush", brush.BrushTex, typeof(Texture2D), true));
 
                 //brush size
-                brush.SetBrushSize(EditorGUILayout.IntField("Size", brush.BrushSize));
+                brush.SetBrushSize(EditorGUILayout.IntField("Size", brush.Size));
 
                 //brush strength
-                brush.SetBrushStrength(EditorGUILayout.FloatField("Strength", brush.BrushStrength));
+                brush.SetBrushStrength(EditorGUILayout.FloatField("Strength", brush.Strength));
 
                 //brush mode
-                //brushMode = (BrushMode)EditorGUILayout.EnumPopup("Brush mode", brushMode);
+                brush.SetBrushMode((BrushMode)EditorGUILayout.EnumPopup("Brush mode", brush.Mode));
             }
         }
 
@@ -216,7 +212,7 @@ namespace BlendPaint
             Event e = Event.current;
             if (e != null && e.keyCode == KeyCode.P)
             {
-                //If started painting, begin recording undo group
+                //If started painting, begin recording undo group (DOESN'T WORK)
                 if (e.type == EventType.KeyDown) Undo.SetCurrentGroupName("Paint on " + selection);
 
                 Vector2 uvPos = Vector2.zero;
@@ -227,8 +223,19 @@ namespace BlendPaint
                 }
             }
 
-            //if stopped painting, end recording undo group
-            if (e.type == EventType.KeyUp && e.keyCode == KeyCode.P) Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
+            //if stopped painting, end recording undo group and svae texture changes
+            if (e.type == EventType.KeyUp && e.keyCode == KeyCode.P)
+            {
+                Undo.CollapseUndoOperations(Undo.GetCurrentGroup()); //DOESN'T WORK
+
+                //save updated texture - TODO: Save texture only when scene saved
+                Texture2D tex = (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex");
+                string path = AssetDatabase.GetAssetPath(tex);
+                Debug.Log("path = " + path);
+                string name = Path.GetFileName(path);
+                string directory = Path.GetDirectoryName(path);
+                texUtils.SaveTexToFile(tex, directory, name);
+            }
         }
 
         /*
@@ -260,71 +267,26 @@ namespace BlendPaint
         }
         */
 
-        //draws on the texture with a soft brush
-        public void DrawOnTex(Vector2 uvPos, Texture2D tex)
-        {
-            Vector2Int brushCentre = new Vector2Int(Mathf.FloorToInt(uvPos.x * tex.width), Mathf.FloorToInt(uvPos.y * tex.height));
-            /*
-            Vector2Int brushStart = new Vector2Int(Mathf.Max(0, brushCentreTexel.x - brush.HalfBrushSize), Mathf.Max(0, brushCentreTexel.y - brush.HalfBrushSize));
-            Vector2Int brushEnd = new Vector2Int(Mathf.Min(tex.width, brushCentreTexel.x + brush.HalfBrushSize), Mathf.Min(tex.height, brushCentreTexel.y + brush.HalfBrushSize));
-            //Debug.Log("Brush start: " + brushStart + ", brush end: " + brushEnd);
-            int brushRectWidth = brushEnd.x - brushStart.x;
-            int brushRectHeight = brushEnd.y - brushStart.y;
-
-            //https://docs.unity3d.com/ScriptReference/Texture2D.GetPixels.html
-            Color[] texPixels = tex.GetPixels(brushStart.x, brushStart.y, brushRectWidth, brushRectHeight);
-            Color[] newPixels = new Color[texPixels.Length];
-            for(int i = 0; i < texPixels.Length; i++)
-            {
-                int x = i % brushRectWidth;
-                int y = i / brushRectWidth;
-                float opacity = 1 - Vector2.Distance(new Vector2(x, y), brushCentreTexel) / brush.HalfBrushSize;
-                newPixels[i] = Color.Lerp(tex.GetPixel(x, y), brush.ActiveCol, opacity * brush.BrushStrength);
-            }
-
-            tex.SetPixels(brushStart.x, brushStart.y, brushRectWidth, brushRectHeight, newPixels);
-            */
-            
-            for (int x = brushCentre.x - brush.HalfBrushSize; x <= brushCentre.x + brush.HalfBrushSize; x++)
-            {
-                for (int y = brushCentre.y - brush.HalfBrushSize; y <= brushCentre.y + brush.HalfBrushSize; y++)
-                {
-                    float opacity = 1 - Vector2.Distance(new Vector2(x, y), brushCentre) / brush.HalfBrushSize;
-                    /*
-                    //get new colour based on brush mode
-                    Color col;
-                    switch(brushMode)
-                    {
-                        case BrushMode.Add:
-                            //col = tex.GetPixel(x, y) + (brush.ActiveCol * (opacity * brush.BrushStrength));
-                            break;
-                        case BrushMode.Normal:
-                        default:
-                            col = Color.Lerp(tex.GetPixel(x, y), brush.ActiveCol, opacity * brush.BrushStrength);
-                            break;
-                    }
-                    */
-                    Color col = Color.Lerp(tex.GetPixel(x, y), brush.ActiveCol, opacity * brush.BrushStrength);
-
-                    //assign new colour to tex pixel
-                    tex.SetPixel(x, y, col);
-                }
-            }
-            
-            Undo.RegisterCompleteObjectUndo(tex, "Paint on blend texture");
-            tex.Apply();
-            Repaint();
-        }
-
         //compute shader version of DrawOnTex
         public void DrawOnTex_Compute(Vector2 uvPos, Texture2D tex)
         {
             
-            //brush position info
-            int[] brushCentre = new int[2] { Mathf.FloorToInt(uvPos.x * tex.width), Mathf.FloorToInt(uvPos.y * tex.height) };
-            //int[] brushStart = new int[2] { brushCentre[0] - brush.HalfBrushSize, brushCentre[1] - brush.HalfBrushSize };
-            //int[] brushEnd = new int[2] { brushCentre[0] + brush.HalfBrushSize, brushCentre[1] + brush.HalfBrushSize };
-
+            //get kernel handle corresponding to brush mode
+            int drawOnTexKernelHandle;
+            switch(brush.Mode)
+            {
+                case BrushMode.Add:
+                    drawOnTexKernelHandle = drawOnTexCompute.FindKernel("DrawOnTex_Additive");
+                    break;
+                case BrushMode.Subtract:
+                    drawOnTexKernelHandle = drawOnTexCompute.FindKernel("DrawOnTex_Subtractive");
+                    break;
+                case BrushMode.Normal:
+                default:
+                    drawOnTexKernelHandle = drawOnTexCompute.FindKernel("DrawOnTex_Normal");
+                    break;
+            }
+            
             //threads
             const int GROUP_SIZE = 8; //must be same as in the compute shader
             int threadGroupsX = tex.width / GROUP_SIZE;
@@ -335,18 +297,23 @@ namespace BlendPaint
             result.enableRandomWrite = true;
             result.Create();
             
+            //set compute shader parameters
             drawOnTexCompute.SetFloats("brushColour", new float[4] { brush.ActiveCol[0], brush.ActiveCol[1], brush.ActiveCol[2], brush.ActiveCol[3] });
-            drawOnTexCompute.SetInt("brushHalfSize", brush.HalfBrushSize);
-            drawOnTexCompute.SetFloat("brushStrength", brush.BrushStrength);
+            drawOnTexCompute.SetInt("brushHalfSize", brush.HalfSize);
+            drawOnTexCompute.SetFloat("brushStrength", brush.Strength);
+            int[] brushCentre = new int[2] { Mathf.FloorToInt(uvPos.x * tex.width), Mathf.FloorToInt(uvPos.y * tex.height) };
             drawOnTexCompute.SetInts("brushCentre", brushCentre);
             drawOnTexCompute.SetTexture(drawOnTexKernelHandle, "inputTex", tex);
             drawOnTexCompute.SetTexture(drawOnTexKernelHandle, "Result", result);
 
+            //dispatch
             drawOnTexCompute.Dispatch(drawOnTexKernelHandle, threadGroupsX, threadGroupsY, 1);
             
             //write result render texture to blend tex
             RenderTexture.active = result;
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            
+            //apply
             Undo.RegisterCompleteObjectUndo(tex, "Paint on blend texture");
             tex.Apply();
             Repaint();

@@ -1,18 +1,36 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel DrawOnTex
+#pragma kernel DrawOnTex_Normal
+#pragma kernel DrawOnTex_Additive
+#pragma kernel DrawOnTex_Subtractive
 #define GROUP_SIZE 8
 float4 brushColour;
 uint brushHalfSize;
 float brushStrength;
 uint2 brushCentre;
+uniform uint brushMode; //0 = normal, 1 = additive
 
 Texture2D<float4> inputTex;
 RWTexture2D<float4> Result;
 
 [numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
-void DrawOnTex (uint3 id : SV_DispatchThreadID)
+void DrawOnTex_Normal(uint3 id : SV_DispatchThreadID)
 {
     //get distance from brush centre; change tex colour based on brush distance/opacity (simulates a soft round brush)
     float opacity = 1 - saturate (distance(id.xy, brushCentre) / brushHalfSize);
     Result[id.xy] = lerp(inputTex[id.xy], brushColour, opacity * saturate(brushStrength));
+}
+
+[numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
+void DrawOnTex_Additive(uint3 id : SV_DispatchThreadID)
+{
+    float opacity = 1 - saturate(distance(id.xy, brushCentre) / brushHalfSize);
+    Result[id.xy] = inputTex[id.xy] + (brushColour * opacity * saturate(brushStrength));
+}
+
+[numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
+void DrawOnTex_Subtractive(uint3 id : SV_DispatchThreadID)
+{
+    //get distance from brush centre; change tex colour based on brush distance/opacity (simulates a soft round brush)
+    float opacity = 1 - saturate(distance(id.xy, brushCentre) / brushHalfSize);
+    Result[id.xy] = inputTex[id.xy] - (brushColour * opacity * saturate(brushStrength));
 }

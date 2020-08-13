@@ -213,7 +213,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0.75
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -571,11 +571,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseTex:
-        m_Texture: {fileID: 2800000, guid: e5b9a7d9913d96447a29108be61aa0d7, type: 3}
+        m_Texture: {fileID: 2800000, guid: f3b3da569307350438c51369caa7c935, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexHRMA:
-        m_Texture: {fileID: 2800000, guid: 74e8e4a8a525d334fa209c96c40c321a, type: 3}
+        m_Texture: {fileID: 2800000, guid: e0a7ae0aa2797614ba28d7d970b0fc4e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexHeight:
@@ -583,7 +583,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexNormal:
-        m_Texture: {fileID: 2800000, guid: 20693b99fd48afe4f8b62e9349931240, type: 3}
+        m_Texture: {fileID: 2800000, guid: 86102e66ec1cf574e97a31a6da94220d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
@@ -693,7 +693,7 @@ Material:
     m_Floats:
     - _AOStrength: 1
     - _BaseMetallic: 0
-    - _BaseTexHeightMult: 1
+    - _BaseTexHeightMult: 2.42
     - _BlendSource: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -713,7 +713,7 @@ Material:
     - _OcclusionMinSamples: 2
     - _OcclusionStrength: 1
     - _Parallax: 0
-    - _ParallaxAmt: 0.017
+    - _ParallaxAmt: 0.012
     - _ParallaxMaxSamples: 100
     - _ParallaxMinSamples: 100
     - _PlxType: 1

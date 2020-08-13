@@ -4,9 +4,9 @@ half3 blend2Base(half3 cBase, float hBase, half3 c1, float h1, half3 blend, floa
 {
 	//(1 - blend.r) sets base to everything that's not red (colour corresponding to c1)
 	float blendBase = (1 - blend.r);
-	float heightStart = max(hBase * blendBase, h1 * blend.r) - blendFactor;
-	float levelBase = max(hBase - heightStart, 0);
-	float level1 = max(h1 - heightStart, 0);
+	float minHeightThreshold = max(hBase * blendBase, h1 * blend.r) - blendFactor;
+	float levelBase = max(hBase - minHeightThreshold, 0);
+	float level1 = max(h1 - minHeightThreshold, 0);
 	cBase *= blendBase * levelBase;
 	c1 *= blend.r * level1;
 
@@ -16,11 +16,11 @@ half3 blend2Base(half3 cBase, float hBase, half3 c1, float h1, half3 blend, floa
 half3 blend3(half3 cBase, float hBase, half3 c1, float h1, half3 c2, float h2, half3 blend, float blendFactor)
 {
 	float blendBase = max(0, 1 - (blend.r + blend.g));
-	float heightStart = max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g) - blendFactor;
+	float minHeightThreshold = max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g) - blendFactor;
 
-	hBase = max(hBase - heightStart, 0);
-	h1 = max(h1 - heightStart, 0);
-	h2 = max(h2 - heightStart, 0);
+	hBase = max(hBase - minHeightThreshold, 0);
+	h1 = max(h1 - minHeightThreshold, 0);
+	h2 = max(h2 - minHeightThreshold, 0);
 
 	cBase *= blendBase * hBase; //base is whatever isn't red or green
 	c1 *= blend.r * h1;
@@ -33,12 +33,12 @@ half3 blend4(half3 cBase, float hBase, half3 c1, float h1, half3 c2, float h2, h
 {
 	//base tex blend amount is "remaining black" after adding other channels together (cannot go below zero)
 	float blendBase = max(0, 1 - (blend.r + blend.g + blend.b));
-	float heightStart = max(max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g), h3 * blend.b) - blendFactor;
+	float minHeightThreshold = max(max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g), h3 * blend.b) - blendFactor;
 
-	hBase = max(hBase - heightStart, 0);
-	h1 = max(h1 - heightStart, 0);
-	h2 = max(h2 - heightStart, 0);
-	h3 = max(h3 - heightStart, 0);
+	hBase = max(hBase - minHeightThreshold, 0);
+	h1 = max(h1 - minHeightThreshold, 0);
+	h2 = max(h2 - minHeightThreshold, 0);
+	h3 = max(h3 - minHeightThreshold, 0);
 
 	cBase *= blendBase * hBase;
 	c1 *= blend.r * h1;
@@ -59,10 +59,10 @@ half3 getBlendAmounts(float hBase, float h1, half3 blend, float blendFactor)
 {
 	//base tex blend amount is "remaining black" after adding other channels together (cannot go below zero)
 	float blendBase = 1 - blend.r;
-	float heightStart = max(hBase * blendBase, h1 * blend.r) - blendFactor;
+	float minHeightThreshold = max(hBase * blendBase, h1 * blend.r) - blendFactor;
 
-	hBase = max(hBase - heightStart, 0);
-	h1 = max(h1 - heightStart, 0);
+	hBase = max(hBase - minHeightThreshold, 0);
+	h1 = max(h1 - minHeightThreshold, 0);
 
 	return half3(blend.r * h1, 0, 0) / ((blendBase * hBase) + (blend.r * h1));
 }
@@ -72,11 +72,11 @@ half3 getBlendAmounts(float hBase, float h1, float h2, half3 blend, float blendF
 {
 	//base tex blend amount is "remaining black" after adding other channels together (cannot go below zero)
 	float blendBase = max(0, 1 - (blend.r + blend.g));
-	float heightStart = max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g) - blendFactor;
+	float minHeightThreshold = max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g) - blendFactor;
 
-	hBase = max(hBase - heightStart, 0);
-	h1 = max(h1 - heightStart, 0);
-	h2 = max(h2 - heightStart, 0);
+	hBase = max(hBase - minHeightThreshold, 0);
+	h1 = max(h1 - minHeightThreshold, 0);
+	h2 = max(h2 - minHeightThreshold, 0);
 
 	return half3(blend.r * h1, blend.g * h2, 0) / ((blendBase * hBase) + (blend.r * h1) + (blend.g * h2));
 }
@@ -86,12 +86,12 @@ half3 getBlendAmounts(float hBase, float h1, float h2, float h3, half3 blend, fl
 {
 	//base tex blend amount is "remaining black" after adding other channels together (cannot go below zero)
 	float blendBase = max(0, 1 - (blend.r + blend.g + blend.b));
-	float heightStart = max(max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g), h3 * blend.b) - blendFactor;
+	float minHeightThreshold = max(max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g), h3 * blend.b) - blendFactor;
 
-	hBase = max(hBase - heightStart, 0);
-	h1 = max(h1 - heightStart, 0);
-	h2 = max(h2 - heightStart, 0);
-	h3 = max(h3 - heightStart, 0);
+	hBase = max(hBase - minHeightThreshold, 0);
+	h1 = max(h1 - minHeightThreshold, 0);
+	h2 = max(h2 - minHeightThreshold, 0);
+	h3 = max(h3 - minHeightThreshold, 0);
 
 	float r = blend.r * h1;
 	float g = blend.g * h2;
@@ -103,9 +103,9 @@ half3 getBlendAmounts(float hBase, float h1, float h2, float h3, half3 blend, fl
 half3 getBlendAmountsHeightStartTest(float hBase, float h1, float h2, float h3, half3 blend, float blendFactor)
 {
 	float blendBase = max(0, 1 - (blend.r + blend.g + blend.b));
-	float heightStart = max(max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g), h3 * blend.b) - blendFactor;
+	float minHeightThreshold = max(max(max(hBase * blendBase, h1 * blend.r), h2 * blend.g), h3 * blend.b) - blendFactor;
 
-	return half3(heightStart, heightStart, heightStart);
+	return half3(minHeightThreshold, minHeightThreshold, minHeightThreshold);
 }
 
 //hard blend amounts
@@ -164,7 +164,8 @@ half3 getColFromBlendAmounts(half3 cols[4], int numCols, half3 blendAmounts)
 /*----getBlendedHeightBlendAll/pomGetBlendedHeightBlendAll----*/
 //getBlendedHeightBlendAll - function to get blended height with calculated blend amounts and specified UV coordinate
 //pomGetBlendedHeightBlendAll - gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
-//error in POM etc. (see https://www.gamedev.net/forums/topic/621519-why-cant-i-use-tex2d-in-loop-with-hlsl/)
+//error in POM (see https://www.gamedev.net/forums/topic/621519-why-cant-i-use-tex2d-in-loop-with-hlsl/)
+
 
 float getBlendedHeightBlendAll
 (
@@ -230,11 +231,11 @@ float getBlendedHeightAddAll(sampler2D hmaps[4], float hmapMults[4], int numHmap
 float GetBlendedHeight(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, half3 blendAmounts)
 {
 #if defined(_HEIGHTBLENDMODE_ADDTOBASE)
-	return getBlendedHeightAddToBase(hmaps, hmapMults, 4, uv, blendAmounts).r;
+	return getBlendedHeightAddToBase(hmaps, hmapMults, numHmaps, uv, blendAmounts).r;
 #elif defined(_HEIGHTBLENDMODE_ADDALL)
-	return getBlendedHeightAddAll(hmaps, hmapMults, 4, uv).r;
+	return getBlendedHeightAddAll(hmaps, hmapMults, numHmaps, uv).r;
 #else //blend all
-	return getBlendedHeightBlendAll(hmaps, hmapMults, 4, uv, blendAmounts).r;
+	return getBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, uv, blendAmounts).r;
 #endif 
 }
 
@@ -259,17 +260,16 @@ float pomGetBlendedHeightBlendAll
 }
 */
 
-
 //gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
 float pomGetBlendedHeightBlendAll(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, float dx, float dy, half3 blendAmounts)
 {
 	//initialise with base height
-	float blendedHeight = (tex2Dgrad(hmaps[0], uv, dx, dy).r * hmapMults[0]);
+	float blendedHeight = (tex2Dgrad(hmaps[0], uv, dx, dy).r * hmapMults[0]) * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
 	
 	[unroll]
 	for (int i = 1; i < numHmaps; i++)
 	{
-		blendedHeight += (tex2Dgrad(hmaps[i], uv, dx, dy).r * hmapMults[i]);
+		blendedHeight += (tex2Dgrad(hmaps[i], uv, dx, dy).r * hmapMults[i]) * blendAmounts[i - 1];
 	}
 
 	return blendedHeight;
@@ -310,11 +310,11 @@ float pomGetBlendedHeightAddAll(sampler2D hmaps[4], float hmapMults[4], int numH
 float pomGetBlendedHeight(sampler2D hmaps[4], float hmapMults[4], int numHmaps, float2 uv, float dx, float dy, half3 blendAmounts)
 {
 #if defined(_HEIGHTBLENDMODE_ADDTOBASE)
-	return pomGetBlendedHeightAddToBase(hmaps, hmapMults, 4, uv, dx, dy, blendAmounts).r;
+	return pomGetBlendedHeightAddToBase(hmaps, hmapMults, numHmaps, uv, dx, dy, blendAmounts).r;
 #elif defined(_HEIGHTBLENDMODE_ADDALL)
-	return pomGetBlendedHeightAddAll(hmaps, hmapMults, 4, uv, dx, dy).r;
+	return pomGetBlendedHeightAddAll(hmaps, hmapMults, numHmaps, uv, dx, dy).r;
 #else //blend all
-	return pomGetBlendedHeightBlendAll(hmaps, hmapMults, 4, uv, dx, dy, blendAmounts).r;
+	return pomGetBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, uv, dx, dy, blendAmounts).r;
 #endif 
 }
 

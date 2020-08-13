@@ -9,10 +9,10 @@ namespace BlendPaint
     {
         //Creates a new black texture with appropriate import settings for a paintable blend texture,
         //and saves it to the given file path. Returns the full asset path of the texture
-        public string CreateAndSaveNewBlendTex(int width, int height, string filePath, string fileName)
+        public string CreateAndSaveNewBlendTex(int width, int height, string directory, string fileName)
         {
             //Make full asset path from file path and filename
-            string assetPath = filePath + "/" + fileName;
+            string assetPath = directory + "/" + fileName;
 
             //Create texture
             Texture2D tex = new Texture2D(width, height);
@@ -26,7 +26,7 @@ namespace BlendPaint
                 }
             }
 
-            SaveTexToFile(tex, filePath, fileName);
+            SaveTexToFile(tex, directory, fileName);
 
             //Need to import texture from assets in order to change its import settings
             TextureImporter texImporter = (TextureImporter)TextureImporter.GetAtPath(assetPath);
@@ -41,16 +41,16 @@ namespace BlendPaint
             return assetPath;
         }
 
-        private void SaveTexToFile(Texture2D tex, string filePath, string fileName)
+        public void SaveTexToFile(Texture2D tex, string directory, string fileName)
         {
-            if (!System.IO.Directory.Exists(filePath))
+            if (!System.IO.Directory.Exists(directory))
             {
-                Debug.LogError("Save directory " + filePath + " doesn't exist! Texture will not be saved");
+                Debug.LogError("Save directory " + directory + " doesn't exist! Texture will not be saved");
             }
             else
             {
-                System.IO.File.WriteAllBytes(filePath + "/" + fileName, tex.EncodeToPNG());
-                Debug.Log("Texture saved: " + filePath + "/" + fileName);
+                System.IO.File.WriteAllBytes(directory + "/" + fileName, tex.EncodeToPNG());
+                Debug.Log("Texture saved: " + directory + "/" + fileName);
                 AssetDatabase.Refresh(); //if saving to the asset folder, need to scan for modified assets
             }
         }
