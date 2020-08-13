@@ -351,7 +351,5 @@ namespace BlendPaint
 
             return false;
         }
-
-
     }
 }
