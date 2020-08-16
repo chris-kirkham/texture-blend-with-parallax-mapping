@@ -74,8 +74,8 @@ namespace BlendPaint
             //init compute shader
             drawOnTexCompute = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/BlendPaint/Scripts/DrawOnTexSoftRoundBrushCompute.compute");
 
-            brush = Resources.Load<BlendBrush>("BlendPaint/Brushes/Brush ScriptableObjects/BlendPaintBrush");
-            brush.LoadBrush();
+            brush = AssetDatabase.LoadAssetAtPath<BlendBrush>("Assets/BlendPaint/Brush ScriptableObjects/BlendPaintBrush.asset");
+            brush.LoadDefaultBrush();
             OnSelectionChange();
         }
 
@@ -210,6 +210,8 @@ namespace BlendPaint
         void OnSceneGUI(SceneView sceneView)
         {
             Event e = Event.current;
+
+            //if painting, draw on texture
             if (e != null && e.keyCode == KeyCode.P)
             {
                 //If started painting, begin recording undo group (DOESN'T WORK)
@@ -219,7 +221,8 @@ namespace BlendPaint
                 if (TryGetUVPosFromCursorPos(ref uvPos))
                 {
                     //(Texture painting undo is recorded in DrawOnTex)
-                    DrawOnTex_Compute(uvPos, (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex"));
+                    Texture2D tex = (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex");
+                    if(tex != null) DrawOnTex_Compute(uvPos, tex);
                 }
             }
 
@@ -230,11 +233,15 @@ namespace BlendPaint
 
                 //save updated texture - TODO: Save texture only when scene saved
                 Texture2D tex = (Texture2D)selection.GetComponent<Renderer>().sharedMaterial.GetTexture("_BlendTex");
-                string path = AssetDatabase.GetAssetPath(tex);
-                Debug.Log("path = " + path);
-                string name = Path.GetFileName(path);
-                string directory = Path.GetDirectoryName(path);
-                texUtils.SaveTexToFile(tex, directory, name);
+                if(tex != null)
+                {
+                    string path = AssetDatabase.GetAssetPath(tex);
+                    Debug.Log("path = " + path);
+                    string name = Path.GetFileName(path);
+                    string directory = Path.GetDirectoryName(path);
+                    texUtils.SaveTexToFile(tex, directory, name);
+                }
+                
             }
         }
 
@@ -336,7 +343,7 @@ namespace BlendPaint
             Debug.DrawRay(sceneCam.transform.position, HandleUtility.GUIPointToWorldRay(Event.current.mousePosition).direction * 10f, Color.cyan);
             Debug.DrawRay(sceneCam.transform.position, Vector3.up, Color.yellow);
             RaycastHit hit;
-            if (Physics.Raycast(HandleUtility.GUIPointToWorldRay(Event.current.mousePosition), out hit))
+            if (Physics.Raycast(HandleUtility.GUIPointToWorldRay(Event.current.mousePosition), out hit) && hit.transform.gameObject == selection)
             {
                 Debug.DrawRay(hit.point, Vector3.up, Color.magenta);
                 Renderer r = hit.transform.GetComponent<Renderer>();

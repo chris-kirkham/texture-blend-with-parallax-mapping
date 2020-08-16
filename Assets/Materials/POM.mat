@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: POM
   m_Shader: {fileID: 4800000, guid: f78b4cc33498a414d88ffccdf2c9e5ce, type: 3}
-  m_ShaderKeywords: _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_ADDTOBASE _PLXTYPE_OCCLUSION
+  m_ShaderKeywords: _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_BLENDALL _PLXTYPE_OCCLUSION
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -20,15 +20,15 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseTex:
-        m_Texture: {fileID: 2800000, guid: f3fde2793dd324e4aa46fcc673e0529d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1a1bd261fba0f8f4d9438530f0c10c99, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexHRMA:
-        m_Texture: {fileID: 2800000, guid: 4fa2c568e5a7ff5449d6d30a699387a7, type: 3}
+        m_Texture: {fileID: 2800000, guid: fa135c012dfd9024583099b227ef4cc9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexNormal:
-        m_Texture: {fileID: 2800000, guid: fe113e86a2b4a7c47a1b955202a3d91b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9e56bd3296e5f8348bf967e30d66ffc4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
@@ -109,7 +109,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _AOStrength: 1
-    - _BaseTexHeightMult: 2.04
+    - _BaseHeightOffset: 0
+    - _BaseTexHeightMult: 2.22
     - _BlendSource: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -118,16 +119,19 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _H1Mult: 4.74
-    - _H2Mult: 2.4
-    - _H3Mult: 0.77
-    - _HeightBlendFactor: 0.06
-    - _HeightBlendMode: 1
+    - _H1Mult: 0.88
+    - _H1Offset: 0
+    - _H2Mult: 0.4
+    - _H2Offset: 0
+    - _H3Mult: 0
+    - _H3Offset: 0
+    - _HeightBlendFactor: 0.01
+    - _HeightBlendMode: 0
     - _Iterations: 2
     - _Metallic: 0
     - _Mode: 0
-    - _OcclusionMaxSamples: 40
-    - _OcclusionMinSamples: 20
+    - _OcclusionMaxSamples: 20
+    - _OcclusionMinSamples: 10
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ParallaxAmt: 0.02
@@ -138,6 +142,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _BaseTexColour: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Tex1Colour: {r: 1, g: 1, b: 1, a: 1}

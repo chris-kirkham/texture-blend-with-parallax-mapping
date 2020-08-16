@@ -25,39 +25,17 @@ namespace BlendPaint
 
         public BrushMode Mode { get; private set; } = BrushMode.Normal;
 
-        //[SerializeField] public int BrushSize { get; private set; }
-        //[SerializeField] public int HalfBrushSize { get; private set; }
-
-        //Calling the Resources.Load operations from BlendPaintUI's OnEnable() via this function stops it complaining about serialization,
-        //but the serialization still doesn't work
-        public void LoadBrush()
+        public void LoadDefaultBrush()
         {
-            BrushTex = Resources.Load<Texture2D>("BlendPaint/Brushes/Textures/Circle_Soft");
+            BrushTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/BlendPaint/Brushes/Textures/Circle_Soft.png");
             brushTexCopy = BrushTex;
             if (BrushTex == null)
             {
                 Debug.LogError("BlendPaint: default brush sprite" +
-                 " Assets/Resources/BlendPaint/Brushes/Circle_Soft not found. Did you delete, move or rename it?");
+                 " Assets/BlendPaint/Brushes/Textures/Circle_Soft.png not found. Did you delete, move or rename it?");
             }
             if (BrushTex != brushTexCopy) Graphics.CopyTexture(BrushTex, brushTexCopy);
         }
-
-        /*
-        public void DrawOnTex(Vector2 uvPos, Texture2D tex)
-        {
-            Vector2Int brushCentreTexel = new Vector2Int(Mathf.FloorToInt(uvPos.x * tex.width), Mathf.FloorToInt(uvPos.y * tex.height));
-
-            for(int x = brushCentreTexel.x - HalfBrushSize; x <= brushCentreTexel.x + HalfBrushSize; x++)
-            {
-                for (int y = brushCentreTexel.y - HalfBrushSize; y <= brushCentreTexel.y + HalfBrushSize; y++)
-                {
-                    Color brushCol = brushTex.GetPixel(x, y);
-                    Color col = Color.Lerp(tex.GetPixel(x, y), brushCol, brushCol.a);
-                    tex.SetPixel(x, y, col);
-                }
-            }
-        }
-        */
 
         public void SetBrushTex(Texture2D tex)
         {
