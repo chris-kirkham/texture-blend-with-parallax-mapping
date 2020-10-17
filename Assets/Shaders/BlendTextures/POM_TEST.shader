@@ -1,12 +1,12 @@
 ﻿Shader "Custom/POM_TEST" {
 	Properties{
-		//[Header(Colours)]
+		//Colours
 		_BaseTexColour("Base texture colour", Color) = (1,1,1,1)
 		_Tex1Colour("Texture 1 colour", Color) = (1,1,1,1)
 		_Tex2Colour("Texture 2 colour", Color) = (1,1,1,1)
 		_Tex3Colour("Texture 3 colour", Color) = (1,1,1,1)
 
-		//[Header(Textures)]
+		//Textures
 		_BaseTex("Base albedo", 2D) = "red" {}
 		[Normal] _BaseTexNormal("Base normal", 2D) = "white" {}
 		_BaseTexHRMA("Base HRMA", 2D) = "white" {}
@@ -24,30 +24,31 @@
 		//see https://docs.unity3d.com/ScriptReference/MaterialPropertyDrawer.html - Unity turns KeywordEnums into keyword names in this format: 
 		//"property name" (including trailing underscore) + "_" + "enum name" (all names become ALLCAPS)
 
-		//[Toggle(USE_VERTEX_COLOURS_FOR_BLEND_WEIGHTS)]
 		[KeywordEnum(Texture, VertexColours)] _BlendSource("Source of blend weights", Float) = 0
 		_BlendTex("Blend map", 2D) = "black" {}
 
-		//[Header(Blend parameters)]
+		//Blend parameters
 		[PowerSlider(3)] _HeightBlendFactor("Blend smoothness", Range(0.01, 1)) = 0.5
 		[KeywordEnum(BlendAll, AddToBase, AddAll)] _HeightBlendMode("Height blend mode", Float) = 0
 		_BaseTexHeightMult("Base heightmap intensity", Float) = 0
 		_H1Mult("Tex 1 heightmap intensity", Float) = 0
 		_H2Mult("Tex 2 heightmap intensity", Float) = 0
 		_H3Mult("Tex 3 heightmap intensity", Float) = 0
-		_BaseHeightOffset("Base heightmap offset", Float) = 0
-		_H1Offset("Tex 1 heightmap offset", Float) = 0
-		_H2Offset("Tex 2 heightmap offset", Float) = 0
-		_H3Offset("Tex 3 heightmap offset", Float) = 0
+		[Range] _BaseHeightOffset("Base heightmap offset", Range(-1, 1)) = 0
+		[Range] _H1Offset("Tex 1 heightmap offset", Range(-1, 1)) = 0
+		[Range] _H2Offset("Tex 2 heightmap offset", Range(-1, 1)) = 0
+		[Range] _H3Offset("Tex 3 heightmap offset", Range(-1, 1)) = 0
 
-		//[Header(Parallax mapping)]
+		//Parallax mapping)
 		[KeywordEnum(Offset, IterativeOffset, Occlusion)] _PlxType("Parallax mapping method", Float) = 0
 		[PowerSlider(4)] _ParallaxAmt("Parallax amount", Range(0, 0.5)) = 0.08
 		[IntRange] _Iterations("Iterations", Range(0, 10)) = 2
 		[IntRange] _OcclusionMinSamples("Minimum samples", Range(2, 100)) = 10
 		[IntRange] _OcclusionMaxSamples("Maximum samples", Range(2, 100)) = 20
+		[Toggle(CLIP_SILHOUETTE)] _ClipSilhouette("Clip silhouette", Float) = 0
 
-		//[Header(Surface properties)]
+
+		//Surface properties
 		_AOStrength("AO strength", Range(0,1)) = 1.0
 	}
 		SubShader{
@@ -62,6 +63,7 @@
 
 			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL //height blend modes
 			#pragma shader_feature _PLXTYPE_OFFSET _PLXTYPE_ITERATIVEOFFSET _PLXTYPE_OCCLUSION //parallax offset methods
+			#pragma shader_feature CLIP_SILHOUETTE
 
 			struct Input {
 				float2 texcoord;
@@ -77,7 +79,7 @@
 
 			/* heightmap adjust params */
 			float _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult;
-			//float _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset;
+			float _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset;
 
 			/* heightmap texture blending */
 			float _BlendSource;
@@ -90,9 +92,10 @@
 			float _ParallaxAmt;
 			float _Iterations;
 			int _OcclusionMinSamples, _OcclusionMaxSamples;
+			float _ClipSilhouette;
 
+			/* surface properties */
 			float4 _BaseTexColour, _Tex1Colour, _Tex2Colour, _Tex3Colour;
-			half _BaseMetallic, _Tex1Metallic, _Tex2Metallic, _Tex3Metallic;
 			half _AOStrength;
 
 			void parallax_vert(
@@ -129,25 +132,19 @@
 				OUT.texcoord = IN.texcoord;
 			}
 
-			/*
-			float getAdjustedHeight(float height, float intensity, float offset)
-			{
-				return saturate(height + ((height - 0.5) * intensity) + offset);
-			}
-			*/
-			
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 
 				float2 uv = IN.texcoord;
 
 				//need to use the initial (non-parallax-offset) uv for the height; r/m/ao uses parallax uv
-				float hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult);
-				float h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult);
-				float h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult);
-				float h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult);
+				float hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
+				float h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
+				float h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
+				float h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
 				
 				sampler2D hmaps[4] = { _BaseTexHRMA, _Tex1HRMA, _Tex2HRMA, _Tex3HRMA };
 				float hmapMults[4] = { _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult };
+				float hmapOffsets[4] = { _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset };
 				half3 blendTex = tex2D(_BlendTex, IN.texcoord).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 
@@ -155,21 +152,21 @@
 				//get UV offset
 				float2 offset = float2(0, 0);
 				#if defined(_PLXTYPE_OFFSET)
-					offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, 4, uv, blendAmounts), _ParallaxAmt, IN.tangentViewDir);
+					offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, hmapOffsets, 4, uv, blendAmounts), _ParallaxAmt, IN.tangentViewDir);
 				#elif defined(_PLXTYPE_ITERATIVEOFFSET)
-					offset = IterativeParallaxOffset(uv, blendAmounts, hmaps, hmapMults, 4, _ParallaxAmt, _Iterations, IN.tangentViewDir);
+					offset = IterativeParallaxOffset(uv, blendAmounts, hmaps, hmapMults, hmapOffsets, 4, _ParallaxAmt, _Iterations, IN.tangentViewDir);
 				#elif defined(_PLXTYPE_OCCLUSION)
 					offset = POM(_ParallaxAmt, IN.tangentViewDir, IN.sampleRatio, IN.texcoord,
-						hmaps, hmapMults, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
+						hmaps, hmapMults, hmapOffsets, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
 				#endif
 				uv += offset;
 
 				//update blendAmounts with parallax-mapped uv coords
 				blendTex = tex2D(_BlendTex, uv).rgb;
-				hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult);
-				h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult);
-				h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult);
-				h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult);
+				hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
+				h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
+				h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
+				h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
 				blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 
 				/* get other textures using parallax-mapped UVs */
@@ -195,6 +192,12 @@
 				o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
 				o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
 				o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);
+
+				//silhouette clipping - clip uv positions <0 and >1
+				#if defined(CLIP_SILHOUETTE)
+					clip(uv);
+					clip(1 - uv);
+				#endif
 			}
 
 			ENDCG

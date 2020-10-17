@@ -89,7 +89,7 @@ internal class POM_TEST_Shader_Editor : ShaderGUI
 
         GUIContent blendTexLabel = new GUIContent(blendTex.displayName, "Blend map (Black = base tex, RGB = textures 1, 2 and 3)");
 
-        GUIContent heightIntensityLabel = new GUIContent("Increase intensity");
+        GUIContent heightIntensityLabel = new GUIContent("Height intensity");
         GUIContent heightOffsetLabel = new GUIContent("Height offset");
 
         //base tex
@@ -161,6 +161,7 @@ internal class POM_TEST_Shader_Editor : ShaderGUI
         MaterialProperty iterativeParallaxNumIterations = FindProperty("_Iterations");
         MaterialProperty pomMinSamples = FindProperty("_OcclusionMinSamples");
         MaterialProperty pomMaxSamples = FindProperty("_OcclusionMaxSamples");
+        MaterialProperty clipSilhouette = FindProperty("_ClipSilhouette");
 
         materialEditor.ShaderProperty(parallaxType, new GUIContent("Parallax type"));
         materialEditor.ShaderProperty(parallaxAmount, new GUIContent("Parallax amount"));
@@ -173,13 +174,18 @@ internal class POM_TEST_Shader_Editor : ShaderGUI
             materialEditor.ShaderProperty(pomMinSamples, new GUIContent("Min samples"));
             materialEditor.ShaderProperty(pomMaxSamples, new GUIContent("Max samples"));
         }
+
+        materialEditor.ShaderProperty(clipSilhouette, new GUIContent("Clip silhouette"));
     }
 
     private void DoSurfaceProperties()
     {
         GUILayout.Label("Surface properties", EditorStyles.boldLabel);
         MaterialProperty aoStrength = FindProperty("_AOStrength");
+        
         materialEditor.ShaderProperty(aoStrength, new GUIContent("AO strength"));
+
+
     }
 
     //convenience method to find a property using this material's MaterialProperties (stored as a member variable)

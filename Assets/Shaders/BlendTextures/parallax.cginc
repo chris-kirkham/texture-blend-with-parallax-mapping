@@ -8,13 +8,13 @@ float2 ParallaxOffsetLimited(half heightmapHeight, half parallaxHeight, half3 ta
 	return heightmapHeight * (tangentViewDir.xy / tangentViewDir.z);
 }
 
-float2 IterativeParallaxOffset(float2 uv, half3 blendAmounts, sampler2D hmaps[4], float hmapMults[4], int numHmaps, uniform float parallaxAmt, uniform int iterations, float3 tangentViewDir)
+float2 IterativeParallaxOffset(float2 uv, half3 blendAmounts, sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, uniform float parallaxAmt, uniform int iterations, float3 tangentViewDir)
 {
 	float2 totalOffset = 0;
 
 	for (int i = 0; i < iterations; i++)
 	{
-		float2 offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, numHmaps, uv, blendAmounts), parallaxAmt, tangentViewDir);
+		float2 offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, hmapOffsets, numHmaps, uv, blendAmounts), parallaxAmt, tangentViewDir);
 		totalOffset += offset;
 		uv += offset;
 	}
@@ -29,6 +29,7 @@ float2 POM(
 	float2 texcoord,
 	sampler2D heightMaps[4],
 	float heightMapMults[4],
+	float heightMapOffsets[4],
 	sampler2D blendTex,
 	float blendFactor,
 	int nMinSamples,
@@ -67,11 +68,11 @@ float2 POM(
 
 		//get blended height based on height blend mode
 #if defined(_HEIGHTBLENDMODE_ADDTOBASE)
-		fCurrSampledHeight = pomGetBlendedHeightAddToBase(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
+		fCurrSampledHeight = pomGetBlendedHeightAddToBase(heightMaps, heightMapMults, heightMapOffsets, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
 #elif defined(_HEIGHTBLENDMODE_ADDALL)
-		fCurrSampledHeight = pomGetBlendedHeightAddAll(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy).r;
+		fCurrSampledHeight = pomGetBlendedHeightAddAll(heightMaps, heightMapMults, heightMapOffsets, 4, texcoord + vCurrOffset, dx, dy).r;
 #else //blend all
-		fCurrSampledHeight = pomGetBlendedHeightBlendAll(heightMaps, heightMapMults, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
+		fCurrSampledHeight = pomGetBlendedHeightBlendAll(heightMaps, heightMapMults, heightMapOffsets, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
 #endif 
 
 		if (fCurrSampledHeight > fCurrRayHeight)
@@ -117,6 +118,7 @@ float2 POM_test1
 	float heightmapHeight,
 	sampler2D hmaps[4],
 	float hmapMults[4],
+	float hmapOffsets[4],
 	int numHmaps,
 	float2 heightmapUV,
 	float parallaxAmt,
@@ -150,7 +152,7 @@ float2 POM_test1
 	while (currSample < numSamples)
 	{
 		//currSampledHeight = pomGetBlendedHeightBlendAll(heightmapUV + currOffset, dx, dy, blendAmounts);
-		currSampledHeight = pomGetBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, heightmapUV + currOffset, dx, dy, blendAmounts);
+		currSampledHeight = pomGetBlendedHeightBlendAll(hmaps, hmapMults, hmapOffsets, numHmaps, heightmapUV + currOffset, dx, dy, blendAmounts);
 		if (currSampledHeight > currRayHeight)
 		{
 			float delta1 = currSampledHeight - currRayHeight;
@@ -197,6 +199,7 @@ float2 POM_test2
 	float heightmapHeight,
 	sampler2D hmaps[4],
 	float hmapMults[4],
+	float hmapOffsets[4],
 	float numHmaps,
 	float2 heightmapUV,
 	half3 blendAmounts,
@@ -224,7 +227,7 @@ float2 POM_test2
 		currLayerHeight += layerHeight; //to the next layer
 		currUV -= offsetPerLayer; //shift of texture coordinates
 		//currHeightmapHeight = 1 - pomGetBlendedHeightBlendAll(currUV, dx, dy, blendAmounts); //new depth from heightmap
-		currHeightmapHeight = 1 - pomGetBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, currUV, dx, dy, blendAmounts);
+		currHeightmapHeight = 1 - pomGetBlendedHeightBlendAll(hmaps, hmapMults, hmapOffsets, numHmaps, currUV, dx, dy, blendAmounts);
 	}
 
 	float2 prevUV = currUV + offsetPerLayer; //previous texture coordinates
@@ -232,7 +235,7 @@ float2 POM_test2
 	//heights for linear interpolation
 	float nextH = currHeightmapHeight - currLayerHeight;
 	//float nextH = currHeightmapHeight + currLayerHeight;
-	float prevH = (1 - getBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, prevUV, blendAmounts)) - currLayerHeight + layerHeight;
+	float prevH = (1 - getBlendedHeightBlendAll(hmaps, hmapMults, hmapOffsets, numHmaps, prevUV, blendAmounts)) - currLayerHeight + layerHeight;
 
 	float weight = nextH / (nextH - prevH); //proportions for linear interpolation
 	float2 finalTexCoords = (prevUV * weight) + (currUV * (1.0 - weight)); //interpolation of texture coordinates
@@ -247,6 +250,7 @@ float2 steepParallaxMapping
 	//float heightmapHeight,
 	sampler2D hmaps[4],
 	float hmapMults[4],
+	float hmapOffsets[4],
 	float numHmaps,
 	float2 heightmapUV,
 	half3 blendAmounts,
@@ -267,14 +271,14 @@ float2 steepParallaxMapping
 	float dx = ddx(heightmapUV);
 	float dy = ddy(heightmapUV);
 	//float currHeightmapHeight = heightmapHeight;
-	float currHeightmapHeight = pomGetBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, currUV, dx, dy, blendAmounts);
+	float currHeightmapHeight = pomGetBlendedHeightBlendAll(hmaps, hmapMults, hmapOffsets, numHmaps, currUV, dx, dy, blendAmounts);
 
 	float inc = 0;
 	while (currHeightmapHeight > currLayerHeight && inc++ < numLayers)
 	{
 		currLayerHeight += layerHeight;
 		currUV += offsetPerLayer;
-		currHeightmapHeight = pomGetBlendedHeightBlendAll(hmaps, hmapMults, numHmaps, currUV, dx, dy, blendAmounts);
+		currHeightmapHeight = pomGetBlendedHeightBlendAll(hmaps, hmapMults, hmapOffsets, numHmaps, currUV, dx, dy, blendAmounts);
 	}
 
 	//parallaxAmt = currLayerHeight

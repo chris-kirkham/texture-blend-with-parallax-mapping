@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: POM_Sphere
   m_Shader: {fileID: 4800000, guid: f78b4cc33498a414d88ffccdf2c9e5ce, type: 3}
-  m_ShaderKeywords: _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_BLENDALL _PLXTYPE_OFFSET
+  m_ShaderKeywords: _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_BLENDALL _PLXTYPE_OCCLUSION
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -32,7 +32,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
-        m_Texture: {fileID: 2800000, guid: 77a9d9b63704438438ac97b44b0f79a9, type: 3}
+        m_Texture: {fileID: 2800000, guid: a956588939c41cc4893dc37d73206829, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -109,7 +109,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _AOStrength: 1
-    - _BaseTexHeightMult: 1
+    - _BaseHeightOffset: 0
+    - _BaseTexHeightMult: 0
     - _BlendSource: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -118,26 +119,30 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _H1Mult: 1
-    - _H2Mult: 1
-    - _H3Mult: 1
-    - _HeightBlendFactor: 0.5
+    - _H1Mult: 0
+    - _H1Offset: 0
+    - _H2Mult: 0
+    - _H2Offset: 0
+    - _H3Mult: 0
+    - _H3Offset: 0
+    - _HeightBlendFactor: 1
     - _HeightBlendMode: 0
     - _Iterations: 2
     - _Metallic: 0
     - _Mode: 0
-    - _OcclusionMaxSamples: 20
-    - _OcclusionMinSamples: 10
+    - _OcclusionMaxSamples: 100
+    - _OcclusionMinSamples: 100
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _ParallaxAmt: 0.02
-    - _PlxType: 0
+    - _ParallaxAmt: 0.025
+    - _PlxType: 2
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _BaseTexColour: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Tex1Colour: {r: 1, g: 1, b: 1, a: 1}

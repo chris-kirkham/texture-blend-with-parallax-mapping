@@ -12,6 +12,8 @@ namespace BlendPaint
     public class BlendPaintUI : EditorWindow
     {
         private BlendBrush brush;
+        private BakeBlend bake;
+
         private GameObject selection; //selected object
         private Material selectionMaterial;
         private BlendTexUtils texUtils = new BlendTexUtils();
@@ -66,13 +68,13 @@ namespace BlendPaint
 
         void OnEnable()
         {
-            
             SceneView.duringSceneGui += OnSceneGUI;
             InitHeaderLabelStyle();
-            //InitSubheaderLabelStyle();
             
-            //init compute shader
             drawOnTexCompute = AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/BlendPaint/Scripts/DrawOnTexSoftRoundBrushCompute.compute");
+
+            //initialise blend baking script
+            bake = new BakeBlend(AssetDatabase.LoadAssetAtPath<ComputeShader>("Assets/BlendPaint/Scripts/BakeBlend.compute"));
 
             brush = AssetDatabase.LoadAssetAtPath<BlendBrush>("Assets/BlendPaint/Brush ScriptableObjects/BlendPaintBrush.asset");
             brush.LoadDefaultBrush();
@@ -204,6 +206,41 @@ namespace BlendPaint
 
                 //brush mode
                 brush.SetBrushMode((BrushMode)EditorGUILayout.EnumPopup("Brush mode", brush.Mode));
+
+
+                /* Texture baking */
+                if(GUILayout.Button("Bake blended texture maps"))
+                {
+                    string savePath = EditorUtility.SaveFilePanelInProject("Save new blend map", "texture", "png", "");
+                    string saveName = Path.GetFileName(savePath);
+                    string saveDirectory = Path.GetDirectoryName(savePath);
+
+                    bake.DoBlendBake
+                    (
+                        //save path
+                        saveDirectory,
+                        saveName,
+                        //albedos
+                        (Texture2D)selectionMaterial.GetTexture("_BaseTex"),
+                        (Texture2D)selectionMaterial.GetTexture("_MainTex1"),
+                        (Texture2D)selectionMaterial.GetTexture("_MainTex2"),
+                        (Texture2D)selectionMaterial.GetTexture("_MainTex3"),
+                        //HRMA maps
+                        (Texture2D)selectionMaterial.GetTexture("_BaseTexHRMA"),
+                        (Texture2D)selectionMaterial.GetTexture("_Tex1HRMA"),
+                        (Texture2D)selectionMaterial.GetTexture("_Tex2HRMA"),
+                        (Texture2D)selectionMaterial.GetTexture("_Tex3HRMA"),
+                        //normal maps
+                        (Texture2D)selectionMaterial.GetTexture("_BaseTexNormal"),
+                        (Texture2D)selectionMaterial.GetTexture("_Tex1Normal"),
+                        (Texture2D)selectionMaterial.GetTexture("_Tex2Normal"),
+                        (Texture2D)selectionMaterial.GetTexture("_Tex3Normal"),
+                        //blend map
+                        (Texture2D)selectionMaterial.GetTexture("_BlendTex"),
+                        //blend factor
+                        selectionMaterial.GetFloat("_HeightBlendFactor")
+                    );
+                }
             }
         }
 

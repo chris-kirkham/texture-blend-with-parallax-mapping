@@ -9,7 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: POM_1
   m_Shader: {fileID: 4800000, guid: f78b4cc33498a414d88ffccdf2c9e5ce, type: 3}
-  m_ShaderKeywords: _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_ADDTOBASE _PLXTYPE_OCCLUSION
+  m_ShaderKeywords: CLIP_SILHOUETTE _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_ADDTOBASE
+    _PLXTYPE_OCCLUSION
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -20,15 +21,15 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseTex:
-        m_Texture: {fileID: 2800000, guid: 1f3aa2bccec22f9448c44853009997f6, type: 3}
+        m_Texture: {fileID: 2800000, guid: f3fde2793dd324e4aa46fcc673e0529d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexHRMA:
-        m_Texture: {fileID: 2800000, guid: 30c1a242c434b5e4ea18de8f743555de, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4fa2c568e5a7ff5449d6d30a699387a7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseTexNormal:
-        m_Texture: {fileID: 2800000, guid: 890a68e7cb39013438f9c95aa7518ca4, type: 3}
+        m_Texture: {fileID: 2800000, guid: fe113e86a2b4a7c47a1b955202a3d91b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
@@ -113,6 +114,7 @@ Material:
     - _BaseTexHeightMult: 0
     - _BlendSource: 0
     - _BumpScale: 1
+    - _ClipSilhouette: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
@@ -125,16 +127,16 @@ Material:
     - _H2Offset: 0
     - _H3Mult: 0
     - _H3Offset: 0
-    - _HeightBlendFactor: 0.01
+    - _HeightBlendFactor: 0.1
     - _HeightBlendMode: 1
-    - _Iterations: 1
+    - _Iterations: 10
     - _Metallic: 0
     - _Mode: 0
-    - _OcclusionMaxSamples: 40
+    - _OcclusionMaxSamples: 100
     - _OcclusionMinSamples: 20
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _ParallaxAmt: 0.03
+    - _ParallaxAmt: 0.061
     - _PlxType: 2
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -142,6 +144,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _BaseTexColour: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Tex1Colour: {r: 1, g: 1, b: 1, a: 1}

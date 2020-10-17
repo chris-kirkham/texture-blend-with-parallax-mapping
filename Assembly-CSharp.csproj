@@ -8,8 +8,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <ProjectGuid>{52CB325C-815F-859F-EEF3-91C3B4734846}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -57,23 +56,28 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\BlendPaint\Scripts\BlendBrush.cs" />
+    <Compile Include="Assets\BlendPaint\Scripts\PaintUtils.cs" />
+    <Compile Include="Assets\BlendPaint\Scripts\BrushMode.cs" />
     <Compile Include="Assets\BlendPaint\Scripts\BlendTexUtils.cs" />
     <Compile Include="Assets\BlendPaint\Scripts\Canvas.cs" />
-    <Compile Include="Assets\BlendPaint\Scripts\BrushMode.cs" />
-    <Compile Include="Assets\BlendPaint\Scripts\PaintUtils.cs" />
+    <Compile Include="Assets\BlendPaint\Scripts\BakeBlend.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Shaders\BlendTextures\BlendTextures_HRMA_1.shader" />
-    <None Include="Assets\Shaders\BlendTextures\POM_TEST_MINE.shader" />
-    <None Include="Assets\BlendPaint\Scripts\DrawOnTexSoftRoundBrushCompute.compute" />
-    <None Include="Assets\Shaders\BlendTextures\BlendTextures_Tessellation.shader" />
-    <None Include="Assets\Shaders\BlendTextures\POM_TEST.shader" />
-    <None Include="Assets\Shaders\BlendTextures\parallax.cginc" />
-    <None Include="Assets\Textures\rock-snow-ice1-2k_unity\About these PBR files.txt" />
-    <None Include="Assets\Shaders\BlendTextures\BlendTextures_Polybrush.shader" />
-    <None Include="Assets\Shaders\BlendTextures\BlendTextures_HRMAO.shader" />
-    <None Include="Assets\Shaders\BlendTextures\blends.cginc" />
-    <None Include="Assets\Shaders\BlendTextures\BlendTextures.shader" />
+     <None Include="Assets\Shaders\BlendTextures\BlendTextures_HRMA_1.shader" />
+     <None Include="Assets\Shaders\BlendTextures\POM_TEST_MINE.shader" />
+     <None Include="Assets\BlendPaint\Scripts\DrawOnTexSoftRoundBrushCompute.compute" />
+     <None Include="Assets\Shaders\BlendTextures\BlendTextures_Tessellation.shader" />
+     <None Include="Assets\Shaders\BlendTextures\TriplanarBlend.shader" />
+     <None Include="Assets\BlendPaint\Scripts\BakeBlend.compute" />
+     <None Include="Assets\Shaders\BlendTextures\POM_TEST.shader" />
+     <None Include="Assets\Shaders\BlendTextures\parallax.cginc" />
+     <None Include="Assets\Textures\rock-snow-ice1-2k_unity\About these PBR files.txt" />
+     <None Include="Assets\Shaders\BlendTextures\BlendTextures_Polybrush.shader" />
+     <None Include="Assets\Shaders\TriplanarTest.shader" />
+     <None Include="Assets\Shaders\BlendTextures\BlendTextures_HRMAO.shader" />
+     <None Include="Assets\BlendPaint\Scripts\blendsBakeBlend.cginc" />
+     <None Include="Assets\Shaders\BlendTextures\blends.cginc" />
+     <None Include="Assets\Shaders\BlendTextures\BlendTextures.shader" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2020.1.0f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
     </Reference>
