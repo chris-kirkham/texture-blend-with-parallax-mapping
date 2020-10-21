@@ -174,20 +174,57 @@ namespace BlendPaint
                     //create new blend tex
                     if (GUILayout.Button("Create new"))
                     {
-                        //create and save new (black i.e. all base texture) blend texture
-                        string newBlendTexPath = EditorUtility.SaveFilePanelInProject("Save new blend map", "BlendTex.png", "png", "");
-                        string newBlendTexName = Path.GetFileName(newBlendTexPath);
-                        string newBlendTexDirectory = Path.GetDirectoryName(newBlendTexPath);
-                        string newBlendTexAsset = texUtils.CreateAndSaveNewBlendTex
-                        (
-                            selectionMaterial.GetTexture("_BaseTex").width,
-                            selectionMaterial.GetTexture("_BaseTex").height,
-                            newBlendTexDirectory,
-                            newBlendTexName
-                        );
+                        //get blend tex dimensons from first valid albedo texture in material
+                        int width = 0, height = 0;
+                        Texture tex = null;
+                        bool dimensionsFound = false;
+                        if(selectionMaterial.GetTexture("_BaseTex") != null)
+                        {
+                            tex = selectionMaterial.GetTexture("_BaseTex");
+                            dimensionsFound = true;
+                        }
+                        else if(selectionMaterial.GetTexture("_MainTex1") != null)
+                        {
+                            tex = selectionMaterial.GetTexture("_MainTex1");
+                            dimensionsFound = true;
+                        }
+                        else if (selectionMaterial.GetTexture("_MainTex2") != null)
+                        {
+                            tex = selectionMaterial.GetTexture("_MainTex2");
+                            dimensionsFound = true;
+                        }
+                        else if (selectionMaterial.GetTexture("_MainTex3") != null)
+                        {
+                            tex = selectionMaterial.GetTexture("_MainTex3");
+                            dimensionsFound = true;
+                        }
+                        else //no valid albedo
+                        {
+                            Debug.LogError("Trying to create a new blend texture, " +
+                                "but no albedo texture found to get its dimensions from! Make sure your material has at least one albedo selected.");
+                        }
 
-                        //set it as the selected blend texture
-                        selectionMaterial.SetTexture("_BlendTex", AssetDatabase.LoadAssetAtPath<Texture2D>(newBlendTexAsset));
+                        if(dimensionsFound)
+                        {
+                            width = tex.width;
+                            height = tex.height;
+
+                            //create and save new (black i.e. all base texture) blend texture
+                            string newBlendTexPath = EditorUtility.SaveFilePanelInProject("Save new blend map", "BlendTex.png", "png", "");
+                            string newBlendTexName = Path.GetFileName(newBlendTexPath);
+                            string newBlendTexDirectory = Path.GetDirectoryName(newBlendTexPath);
+
+                            string newBlendTexAsset = texUtils.CreateAndSaveNewBlendTex
+                            (
+                                width,
+                                height,
+                                newBlendTexDirectory,
+                                newBlendTexName
+                            );
+
+                            //set it as the selected blend texture
+                            selectionMaterial.SetTexture("_BlendTex", AssetDatabase.LoadAssetAtPath<Texture2D>(newBlendTexAsset));
+                        }
                     }
                 }
                 EditorGUILayout.EndHorizontal();
@@ -281,35 +318,6 @@ namespace BlendPaint
                 
             }
         }
-
-        /*
-        //THIS DOESN'T WORK 
-        public void DrawOnTex(Vector2 uvPos, Texture2D tex)
-        {
-            //texel on target texture that will be the brush's least corner (0, 0)
-            //Subtracting half the brush size means the texel corresponding to the given UV position will be the centre of the brush
-            Vector2Int brushStartTexel = new Vector2Int(Mathf.FloorToInt(uvPos.x * tex.width) - brush.halfBrushSize, Mathf.FloorToInt(uvPos.y * tex.height) - brush.halfBrushSize);
-
-            //loop through each brush texel
-            for (int x = 0; x <= brush.brushSize; x++)
-            {
-                for (int y = 0; y <= brush.brushSize; y++)
-                {
-                    //get brush colour at this brush texel
-                    Color brushCol = brush.brushTex.GetPixel(x, y);
-
-                    //get target texture texel
-                    Vector2Int targetTexel = new Vector2Int(brushStartTexel.x + x, brushStartTexel.y + y);
-
-                    //get colour after painting; add brush centre to (x, y) to get current brush texel's position on the target texture
-                    Color col = Color.Lerp(tex.GetPixel(targetTexel.x, targetTexel.y), brushCol, brushCol.a * brush.brushStrength);
-                    tex.SetPixel(targetTexel.x, targetTexel.y, col);
-                }
-            }
-
-            tex.Apply();
-        }
-        */
 
         //compute shader version of DrawOnTex
         public void DrawOnTex_Compute(Vector2 uvPos, Texture2D tex)
