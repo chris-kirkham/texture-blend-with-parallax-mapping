@@ -29,7 +29,7 @@ PBR maps for use with the shader must be packed in this format.
 Three types of parallax mapping are supported, each increasing in quality and performance cost:
 
 #### Parallax offset mapping
-The simplest type of parallax mapping; cheap but low-quality. Noticeable artifacts at shallow viewing angles
+The simplest type of parallax mapping; cheap but low-quality. Noticeable artifacts at shallow viewing angles.
 
 #### Iterative parallax mapping
 Parallax offset mapping applied multiple times. May produce "good enough" results on textures with small height differences. Again, noticeable artifacts at shallow viewing angles.
@@ -46,27 +46,8 @@ When a compatible material is selected, the BlendPaint UI can be used to select 
 To paint on an object in the scene view, hold P while the cursor is over it (object must be selected and use a compatible material). If you have just used the BlendPaint UI, you will need to refocus the scene view by clicking on it before painting. 
 
 #### Paint modes
-##### Normal 
-Overwrites the colour(s) in the brush area.
-
-##### Additive
-Adds the selected colour to those in the brush area.
-
-##### Subtractive
-Subtracts the selected colour from those in the brush area.
-
-
-## Implementation details
-
-### Texture blending
-#### Blend maps
-
-### Parallax mapping
-#### Parallax offset mapping
-
-#### Iterative parallax mapping
-
-#### Parallax occlusion mapping
-
+* Normal - overwrites the colour(s) in the brush area.
+* Additive - adds the selected colour to those in the brush area.
+* Subtractive - subtracts the selected colour from those in the brush area.
 
 ###### Christopher Kirkham, 2020
