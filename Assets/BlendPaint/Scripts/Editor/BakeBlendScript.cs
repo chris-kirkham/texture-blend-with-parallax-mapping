@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace BlendPaint
 {
-    public class BakeBlend
+    public class BakeBlendScript
     {
         private ComputeShader bakeBlendCompute;
         private int bakeBlendKernel;
@@ -15,7 +15,7 @@ namespace BlendPaint
 
         private BlendTexUtils texUtils;
 
-        public BakeBlend(ComputeShader bakeBlendCompute)
+        public BakeBlendScript(ComputeShader bakeBlendCompute)
         {
             texUtils = new BlendTexUtils();
 
@@ -58,6 +58,7 @@ namespace BlendPaint
             //width and height of output textures (taken from base input albedo) 
             int w = baseAlbedo.width;
             int h = baseAlbedo.height;
+            Debug.Log("base albedo size = (" + w + ", " + h + ")");
 
             RenderTextureDescriptor desc = new RenderTextureDescriptor(w, h);
             desc.enableRandomWrite = true;
@@ -83,12 +84,15 @@ namespace BlendPaint
 
             RenderTexture.active = blendedAlbedo;
             blendedAlbedoTex2D.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            blendedAlbedoTex2D.Apply();
 
             RenderTexture.active = blendedHRMA;
             blendedHRMATex2D.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            blendedHRMATex2D.Apply();
 
             RenderTexture.active = blendedNormal;
             blendedNormalTex2D.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            blendedNormalTex2D.Apply();
 
             //save textures according to given directory/name
             string name = Path.GetFileNameWithoutExtension(bakedTextureName);

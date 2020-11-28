@@ -1,0 +1,46 @@
+﻿/* 
+ * Shader to preview the effects of drawing on the texture with the current brush. 
+ * Works the same as the shader to actually draw on the texture, but resets parts of the texture
+ * not under the brush to a previous state, which should be updated whenever the user draws on the texture
+ */
+
+#define GROUP_SIZE 8
+
+#pragma kernel DrawPreview_Normal
+#pragma kernel DrawPreview_Additive
+#pragma kernel DrawPreview_Subtractive
+
+RWTexture2D<float4> Result;
+Texture2D<float4> previousState;
+
+float4 brushColour;
+uint brushHalfSize;
+float brushStrength;
+uint2 brushCentre;
+
+//get brush opacity based on given uv's distance from the brush centre and the brush size; gives the effect of a soft round brush
+float getBrushOpacity(uint2 uv)
+{
+    return 1 - saturate(distance(uv, brushCentre) / brushHalfSize);
+}
+
+[numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
+void DrawPreview_Normal(uint3 id : SV_DispatchThreadID)
+{
+    float opacity = getBrushOpacity(id.xy);
+    Result[id.xy] = opacity > 0 ? lerp(previousState[id.xy], brushColour, getBrushOpacity(id.xy) * saturate(brushStrength)) : previousState[id.xy];
+}
+
+[numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
+void DrawPreview_Additive(uint3 id : SV_DispatchThreadID)
+{
+    float opacity = getBrushOpacity(id.xy);
+    Result[id.xy] = opacity > 0 ? previousState[id.xy] + (brushColour * getBrushOpacity(id.xy) * saturate(brushStrength)) : previousState[id.xy];
+}
+
+[numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
+void DrawPreview_Subtractive(uint3 id : SV_DispatchThreadID)
+{
+    float opacity = getBrushOpacity(id.xy);
+    Result[id.xy] = opacity > 0 ? previousState[id.xy] - (brushColour * getBrushOpacity(id.xy) * saturate(brushStrength)) : previousState[id.xy];
+}

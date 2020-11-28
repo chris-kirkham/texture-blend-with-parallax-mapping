@@ -27,12 +27,12 @@ void BakeBlend (uint3 id : SV_DispatchThreadID)
     float3 blendAmounts = getBlendAmounts(baseHRMA[uv].r, tex1HRMA[uv].r, tex2HRMA[uv].r, tex3HRMA[uv].r, blendMap[uv], blendFactor);
 
     //get blended texture maps from blend amounts
-    //BlendedAlbedo[uv] = getColFromBlendAmounts(baseAlbedo[uv], tex1Albedo[uv], tex2Albedo[uv], tex3Albedo[uv], blendAmounts); //albedo
-    //BlendedHRMA[uv] = getColFromBlendAmounts(baseHRMA[uv], tex1HRMA[uv], tex2HRMA[uv], tex3HRMA[uv], blendAmounts); //height/metallic/roughness/AO
-    //BlendedNormal[uv] = getColFromBlendAmounts(baseNormal[uv], tex1Normal[uv], tex2Normal[uv], tex3Normal[uv], blendAmounts); //normal
+    BlendedAlbedo[uv] = getColFromBlendAmounts(baseAlbedo[uv], tex1Albedo[uv], tex2Albedo[uv], tex3Albedo[uv], blendAmounts); //albedo
+    BlendedHRMA[uv] = getColFromBlendAmounts(baseHRMA[uv], tex1HRMA[uv], tex2HRMA[uv], tex3HRMA[uv], blendAmounts); //height/metallic/roughness/AO
+    BlendedNormal[uv] = getColFromBlendAmounts(baseNormal[uv], tex1Normal[uv], tex2Normal[uv], tex3Normal[uv], blendAmounts); //normal
 
     //TEST
-    BlendedAlbedo[uv] = float4(1, 0, 0, 1);
-    BlendedHRMA[uv] = float4(0, 1, 0, 1);
-    BlendedNormal[uv] = float4(0, 0, 1, 1);
+    BlendedAlbedo[id.xy] = float4(1, 0, 0, 1);
+    BlendedHRMA[id.xy] = float4(0, 1, 0, 1);
+    BlendedNormal[id.xy] = float3(0, 0, 1);
 }

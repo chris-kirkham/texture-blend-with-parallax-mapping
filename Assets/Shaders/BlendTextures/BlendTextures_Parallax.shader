@@ -203,5 +203,5 @@
 			ENDCG
 		}
 			FallBack "Diffuse"
-			CustomEditor "POM_TEST_Shader_Editor"
+			CustomEditor "BlendTextures_Parallax_Shader_Editor"
 }

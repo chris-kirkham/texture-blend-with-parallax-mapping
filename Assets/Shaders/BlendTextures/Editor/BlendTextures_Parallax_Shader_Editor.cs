@@ -7,7 +7,7 @@ using UnityEngine;
 /// Custom inspector GUI for parallax texture blend shader. Based on unity's standard shader GUI
 /// (https://github.com/TwoTailsGames/Unity-Built-in-Shaders/blob/master/Editor/StandardShaderGUI.cs)
 /// </summary>
-internal class POM_TEST_Shader_Editor : ShaderGUI
+internal class BlendTextures_Parallax_Shader_Editor : ShaderGUI
 {
     MaterialEditor materialEditor;
     MaterialProperty[] materialProperties;
