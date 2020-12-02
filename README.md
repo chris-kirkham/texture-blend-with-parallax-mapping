@@ -55,18 +55,4 @@ Adds the selected colour to those in the brush area.
 ##### Subtractive
 Subtracts the selected colour from those in the brush area.
 
-
-## Implementation details
-
-### Texture blending
-#### Blend maps
-
-### Parallax mapping
-#### Parallax offset mapping
-
-#### Iterative parallax mapping
-
-#### Parallax occlusion mapping
-
-
 ###### Christopher Kirkham, 2020
