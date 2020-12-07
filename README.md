@@ -1,4 +1,8 @@
 # Texture Blend Shader with Parallax Mapping
+#### A heightmap-based texture blend shader for Unity, featuring parallax occlusion mapping and an in-editor blend painting tool.
+
+| <img src="README_1.gif"> |
+|:----:|
 
 ## About
 This is a Unity implementation of a shader and complementary editor tool which allows for heightmap-based blending of up to four PBR textures on a single material. The shader also includes options for parallax mapping, including parallax occlusion mapping.
