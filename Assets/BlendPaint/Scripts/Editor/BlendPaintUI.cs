@@ -22,7 +22,7 @@ namespace BlendPaint
         private ComputeShader drawPreviewCompute;
 
         //the texture drawing preview overwrites the selected material's blend map; the blend map is cached here after drawing so we can revert changes the preview made
-        private Texture2D drawPreviewCachedBlendTex;
+        //private Texture2D drawPreviewCachedBlendTex;
 
         /* GUI LAYOUT PARAMETERS */
         private readonly GUILayoutOption[] textureButtonParams = new GUILayoutOption[]
@@ -83,6 +83,7 @@ namespace BlendPaint
 
             brush = AssetDatabase.LoadAssetAtPath<BlendBrush>("Assets/BlendPaint/Brush ScriptableObjects/BlendPaintBrush.asset");
             brush.LoadDefaultBrush();
+            
             OnSelectionChange();
         }
 
@@ -128,9 +129,6 @@ namespace BlendPaint
 
             }
 
-            //update cached blend texture for draw preview
-            if (selectionMaterial != null) drawPreviewCachedBlendTex = (Texture2D)selectionMaterial.GetTexture("_BlendTex");
-
             Repaint(); //need to repaint here or it doesn't update the UI immediately
         }
 
@@ -156,7 +154,7 @@ namespace BlendPaint
 
                 UI_DoSetBrushProperties();
 
-                UI_DoBakeTextureMaps();
+                //UI_DoBakeTextureMaps();
             }
         }
 
@@ -277,7 +275,6 @@ namespace BlendPaint
         void OnSceneGUI(SceneView sceneView)
         {
             Event e = Event.current;
-
             if(e != null)
             {
                 //if cursor is over the scene view, focus on it (instead of the BlendPaint UI);
@@ -305,7 +302,8 @@ namespace BlendPaint
                         if (tex != null) DrawOnTex(uvPos, tex);
                     }
                 }
-                else if (e.type == EventType.KeyUp && e.keyCode == KeyCode.P) //if stopped painting, end recording undo group and save texture changes
+                
+                if (e.type == EventType.KeyUp && e.keyCode == KeyCode.P) //if stopped painting, end recording undo group and save texture changes
                 {
                     Undo.CollapseUndoOperations(Undo.GetCurrentGroup()); //DOESN'T WORK
 
@@ -320,21 +318,22 @@ namespace BlendPaint
                         texUtils.SaveTexToFile(tex, directory, name);
                     }
 
-                    Debug.Log("finished painting");
-
                     //update cached blend texture for draw preview
-                    drawPreviewCachedBlendTex = (Texture2D)selectionMaterial.GetTexture("_BlendTex");
+                    //UpdateDrawPreviewCachedTexture();
                 }
-                else if (e.type == EventType.MouseMove) //preview drawing 
+
+                /*
+                if (e.type == EventType.MouseMove && e.keyCode != KeyCode.P) //preview drawing 
                 {
                     Vector2 uvPos = Vector2.zero;
                     if (TryGetUVPosFromCursorPos(ref uvPos))
                     {
                         Texture2D tex = (Texture2D)selectionMaterial.GetTexture("_BlendTex");
                         Debug.Log("Drawing preview");
-                        //if (tex != null) DrawPreview(uvPos, tex);
+                        if (tex != null) DrawPreview(uvPos, tex);
                     }
                 }
+                */
             }
         }
 
@@ -386,6 +385,7 @@ namespace BlendPaint
             
         }
 
+        /*
         public void DrawPreview(Vector2 uvPos, Texture2D tex)
         {
             int kernel;
@@ -428,6 +428,7 @@ namespace BlendPaint
             tex.Apply();
             Repaint();
         }
+        */
 
         bool IsPaintable(Material m)
         {
@@ -490,5 +491,12 @@ namespace BlendPaint
 
             return false;
         }
+
+        /*
+        void UpdateDrawPreviewCachedTexture()
+        {
+            if(selectionMaterial != null) Graphics.CopyTexture(selectionMaterial.GetTexture("_BlendTex"), drawPreviewCachedBlendTex);
+        }
+        */
     }
 }
