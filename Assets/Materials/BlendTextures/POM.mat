@@ -2,21 +2,28 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: POM
   m_Shader: {fileID: 4800000, guid: f78b4cc33498a414d88ffccdf2c9e5ce, type: 3}
-  m_ShaderKeywords: CLIP_SILHOUETTE _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_BLENDALL
-    _PLXTYPE_OCCLUSION
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - CLIP_SILHOUETTE
+  - _HEIGHTBLENDMODE_BLENDALL
+  - _PLXTYPE_OCCLUSION
+  m_InvalidKeywords:
+  - _BLENDSOURCE_TEXTURE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -33,7 +40,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
-        m_Texture: {fileID: 2800000, guid: 2a7926a7a57b9fc4b91aa138bb9fd31b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 46e2550c402363d428d7183e24e32f45, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -61,15 +68,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex1:
-        m_Texture: {fileID: 2800000, guid: 93265c6d9ed69c64db0d93dbe51d1295, type: 3}
+        m_Texture: {fileID: 2800000, guid: f3fde2793dd324e4aa46fcc673e0529d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex2:
-        m_Texture: {fileID: 2800000, guid: 6b2759a26661e0f44938787416bb660c, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7601d718ffe917c4483ca2ac419bd0ec, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex3:
-        m_Texture: {fileID: 2800000, guid: 7778b474af3e5a047b12bf10c3cbc55f, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0ed6e0a37680240409be06d26e3f9ce1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -85,29 +92,30 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex1HRMA:
-        m_Texture: {fileID: 2800000, guid: b8061110db9294b4fbf9c9bb41070c98, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4fa2c568e5a7ff5449d6d30a699387a7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex1Normal:
-        m_Texture: {fileID: 2800000, guid: e3d9679648d6c9a489ac71d799cd8b6d, type: 3}
+        m_Texture: {fileID: 2800000, guid: fe113e86a2b4a7c47a1b955202a3d91b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex2HRMA:
-        m_Texture: {fileID: 2800000, guid: abf0a9e27ad78894c9943615974bec9e, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8b4b2a5eade08a746ad53ccb956df166, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex2Normal:
-        m_Texture: {fileID: 2800000, guid: 31fbb52227c377949a8577c415223a5b, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8cf8a3ba29939b643a7624e071a759e8, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex3HRMA:
-        m_Texture: {fileID: 2800000, guid: 0b495581b060c914bbcbfd6f29788428, type: 3}
+        m_Texture: {fileID: 2800000, guid: 916bbf0256acd0f4286a871b862c348a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex3Normal:
-        m_Texture: {fileID: 2800000, guid: c466bd1543100b24689dc388973aa758, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8e860c10a27b1e74da2fa525bd2c20f2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _AOStrength: 1
     - _BaseHeightOffset: 0.08
@@ -152,3 +160,4 @@ Material:
     - _Tex3Colour: {r: 1, g: 1, b: 1, a: 1}
     - _Tex4Colour: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
