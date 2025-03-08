@@ -1,0 +1,153 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: DemoVid
+  m_Shader: {fileID: 4800000, guid: f78b4cc33498a414d88ffccdf2c9e5ce, type: 3}
+  m_ShaderKeywords: CLIP_SILHOUETTE _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_BLENDALL
+    _PLXTYPE_OCCLUSION
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseTex:
+        m_Texture: {fileID: 2800000, guid: 5983feb495fb0fe4099524d034c04aac, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseTexHRMA:
+        m_Texture: {fileID: 2800000, guid: a0a3434c07ddf3043a8e8bc46f0e378f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseTexNormal:
+        m_Texture: {fileID: 2800000, guid: 62034fec465d3394e883288ffdac1856, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlendTex:
+        m_Texture: {fileID: 2800000, guid: b7211a9539ee62443bb3a2be2bf089db, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex1:
+        m_Texture: {fileID: 2800000, guid: 580d833fa532e874db37e41f115b2963, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex2:
+        m_Texture: {fileID: 2800000, guid: 6823113ac29c5684b9e0513af2d88fab, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex3:
+        m_Texture: {fileID: 2800000, guid: 7778b474af3e5a047b12bf10c3cbc55f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex1HRMA:
+        m_Texture: {fileID: 2800000, guid: 3db535b72e82fdd4f8c017ac44946212, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex1Normal:
+        m_Texture: {fileID: 2800000, guid: 637221f0d54d48440a34987b50f99900, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex2HRMA:
+        m_Texture: {fileID: 2800000, guid: 0c14c8acd9125e845a7b747971331a30, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex2Normal:
+        m_Texture: {fileID: 2800000, guid: ed897dd6253738a4dbd94d17cadce3a3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex3HRMA:
+        m_Texture: {fileID: 2800000, guid: 0b495581b060c914bbcbfd6f29788428, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex3Normal:
+        m_Texture: {fileID: 2800000, guid: c466bd1543100b24689dc388973aa758, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _AOStrength: 1
+    - _BaseHeightOffset: -0.54
+    - _BaseTexHeightMult: 0.3
+    - _BlendSource: 0
+    - _BumpScale: 1
+    - _ClipSilhouette: 1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _H1Mult: 0
+    - _H1Offset: -0.32
+    - _H2Mult: -1.53
+    - _H2Offset: 0.03
+    - _H3Mult: 0.08
+    - _H3Offset: -0.62
+    - _HeightBlendFactor: 0.01
+    - _HeightBlendMode: 0
+    - _Iterations: 2
+    - _Metallic: 0
+    - _Mode: 0
+    - _OcclusionMaxSamples: 100
+    - _OcclusionMinSamples: 100
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _ParallaxAmt: 0.03
+    - _PlxType: 2
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _UVSec: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseTexColour: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Tex1Colour: {r: 1, g: 1, b: 1, a: 1}
+    - _Tex2Colour: {r: 1, g: 1, b: 1, a: 1}
+    - _Tex3Colour: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
