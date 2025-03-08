@@ -2,20 +2,27 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: IterativeParallax
   m_Shader: {fileID: 4800000, guid: f78b4cc33498a414d88ffccdf2c9e5ce, type: 3}
-  m_ShaderKeywords: _BLENDSOURCE_TEXTURE _HEIGHTBLENDMODE_BLENDALL _PLXTYPE_ITERATIVEOFFSET
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _HEIGHTBLENDMODE_BLENDALL
+  - _PLXTYPE_ITERATIVEOFFSET
+  m_InvalidKeywords:
+  - _BLENDSOURCE_TEXTURE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -32,7 +39,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BlendTex:
-        m_Texture: {fileID: 2800000, guid: 2a7926a7a57b9fc4b91aa138bb9fd31b, type: 3}
+        m_Texture: {fileID: 2800000, guid: caecbf7d9680d684aae05252ef0ff106, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -60,15 +67,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex1:
-        m_Texture: {fileID: 2800000, guid: 0ed6e0a37680240409be06d26e3f9ce1, type: 3}
+        m_Texture: {fileID: 2800000, guid: 12ed09b914b0aeb48a5978904c68cf97, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex2:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 640274f0833221c40bbafd3e1d499f06, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex3:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: f5690500027e4c44b9fb1c7f0e794f86, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -84,33 +91,34 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex1HRMA:
-        m_Texture: {fileID: 2800000, guid: e0a7ae0aa2797614ba28d7d970b0fc4e, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0c14c8acd9125e845a7b747971331a30, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex1Normal:
-        m_Texture: {fileID: 2800000, guid: 8e860c10a27b1e74da2fa525bd2c20f2, type: 3}
+        m_Texture: {fileID: 2800000, guid: ed897dd6253738a4dbd94d17cadce3a3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex2HRMA:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: f77f4ebc8f2f9ab4285731359c6c6def, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex2Normal:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: b9a76cae4c9040047905d6ad8c56538c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex3HRMA:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 3db535b72e82fdd4f8c017ac44946212, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tex3Normal:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ad944f38d63664744bb01b9f60732eed, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _AOStrength: 1
     - _BaseHeightOffset: 0
-    - _BaseTexHeightMult: 1.26
+    - _BaseTexHeightMult: 0
     - _BlendSource: 0
     - _BumpScale: 1
     - _ClipSilhouette: 0
@@ -151,3 +159,4 @@ Material:
     - _Tex3Colour: {r: 1, g: 1, b: 1, a: 1}
     - _Tex4Colour: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
