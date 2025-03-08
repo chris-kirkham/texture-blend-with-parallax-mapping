@@ -12,7 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _HEIGHTBLENDMODE_ADDTOBASE
+  - _HEIGHTBLENDMODE_BLENDALL
   - _PLXTYPE_OFFSET
   m_InvalidKeywords:
   - _BLENDSOURCE_TEXTURE
@@ -118,7 +118,7 @@ Material:
     m_Floats:
     - _AOStrength: 1
     - _BaseHeightOffset: 0
-    - _BaseTexHeightMult: 0
+    - _BaseTexHeightMult: 2
     - _BlendSource: 0
     - _BumpScale: 1
     - _ClipSilhouette: 0
@@ -128,14 +128,14 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _H1Mult: 0
+    - _H1Mult: -1.38
     - _H1Offset: 0
-    - _H2Mult: 0
-    - _H2Offset: 0
-    - _H3Mult: 0
+    - _H2Mult: -1.04
+    - _H2Offset: -0.12
+    - _H3Mult: 1.18
     - _H3Offset: 0
     - _HeightBlendFactor: 0.01
-    - _HeightBlendMode: 1
+    - _HeightBlendMode: 0
     - _Iterations: 2
     - _Metallic: 0
     - _Mode: 0

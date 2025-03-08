@@ -118,7 +118,7 @@ Material:
     m_Floats:
     - _AOStrength: 1
     - _BaseHeightOffset: 0
-    - _BaseTexHeightMult: 0
+    - _BaseTexHeightMult: 2
     - _BlendSource: 0
     - _BumpScale: 1
     - _ClipSilhouette: 0
@@ -128,13 +128,13 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _H1Mult: 0
+    - _H1Mult: -1.38
     - _H1Offset: 0
-    - _H2Mult: 0
-    - _H2Offset: -0.17
-    - _H3Mult: 0
+    - _H2Mult: -1.04
+    - _H2Offset: -0.12
+    - _H3Mult: 1.18
     - _H3Offset: 0
-    - _HeightBlendFactor: 0.01
+    - _HeightBlendFactor: 0.021
     - _HeightBlendMode: 0
     - _Iterations: 10
     - _Metallic: 0

@@ -129,19 +129,19 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _H1Mult: -1.38
+    - _H1Mult: -0.38
     - _H1Offset: 0
-    - _H2Mult: -1.04
-    - _H2Offset: -0.12
-    - _H3Mult: 1.18
+    - _H2Mult: 1.01
+    - _H2Offset: -0.2
+    - _H3Mult: 0.53
     - _H3Offset: 0
     - _HeightBlendFactor: 0.021
     - _HeightBlendMode: 0
     - _Iterations: 2
     - _Metallic: 0
     - _Mode: 0
-    - _OcclusionMaxSamples: 50
-    - _OcclusionMinSamples: 25
+    - _OcclusionMaxSamples: 40
+    - _OcclusionMinSamples: 20
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ParallaxAmt: 0.025
