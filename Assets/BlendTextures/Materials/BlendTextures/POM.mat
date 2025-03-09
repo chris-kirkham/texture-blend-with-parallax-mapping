@@ -140,7 +140,7 @@ Material:
     - _Iterations: 2
     - _Metallic: 0
     - _Mode: 0
-    - _OcclusionMaxSamples: 50
+    - _OcclusionMaxSamples: 20
     - _OcclusionMinSamples: 10
     - _OcclusionStrength: 1
     - _Parallax: 0.02

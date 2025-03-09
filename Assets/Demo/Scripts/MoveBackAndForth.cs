@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Simple script for the demo scene to make a point light move back and forth between two positions
-/// </summary>
-public class PointLightTraverse : MonoBehaviour
+public class MoveBackAndForth : MonoBehaviour
 {
     [SerializeField] private Vector3 min = Vector3.zero;
     [SerializeField] private Vector3 max = Vector3.one;

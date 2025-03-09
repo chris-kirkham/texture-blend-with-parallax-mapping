@@ -45,6 +45,7 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 		//Tessellation
 		_TessellationFactor ("Tessellation factor", Range(1, 32)) = 4
 		_VertDisplacement ("Displacement", Float) = 0.25
+		_DisplacementOffset ("Displacement offset", Range(-1, 0)) = 0
 	}
 		SubShader{
 			Tags { "RenderType" = "Opaque" }
@@ -60,7 +61,7 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL //height blend modes
 
 			struct Input {
-				float2 texcoord : TEXCOORD0;
+				float2 uv_BaseTex;
 			};
 
 			/* textures */
@@ -85,6 +86,7 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 			/* tessellation */
 			float _TessellationFactor;
 			float _VertDisplacement;
+			float _DisplacementOffset;
 
 			float4 tess (appdata_full v0, appdata_full v1, appdata_full v2) {
 				float minDist = 10.0;
@@ -92,7 +94,6 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
                 return UnityDistanceBasedTess(v0.vertex, v1.vertex, v2.vertex, minDist, maxDist, _TessellationFactor);
 			}
 
-			//void vert(inout appdata_full IN, out Input OUT) {
 			void vert(inout appdata_full IN) {
 				float4 uv = float4(IN.texcoord.xy, 0.0f, 0.0f);
 				float hBase = getAdjustedHeight(tex2Dlod(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
@@ -108,12 +109,11 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 				float blendedHeight = getBlendedHeight(heights, 4, blendAmounts);
 
-                IN.vertex.xyz += IN.normal * blendedHeight * _VertDisplacement;
-				//OUT.texcoord = IN.texcoord;
+                IN.vertex.xyz += (IN.normal * blendedHeight * _VertDisplacement) + (IN.normal * _DisplacementOffset * _VertDisplacement);
 			}
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
-				float2 uv = IN.texcoord;
+				float2 uv = IN.uv_BaseTex;
 
 				//need to use the initial (non-parallax-offset) uv for the height; r/m/ao uses parallax uv
 				float hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
