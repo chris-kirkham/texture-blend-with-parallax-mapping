@@ -7,7 +7,7 @@ using UnityEngine;
 /// Custom inspector GUI for parallax texture blend shader. Based on unity's standard shader GUI
 /// (https://github.com/TwoTailsGames/Unity-Built-in-Shaders/blob/master/Editor/StandardShaderGUI.cs)
 /// </summary>
-internal class BlendTextures_Parallax_Shader_Editor : ShaderGUI
+internal class BlendTexturesTessellatedInspector : ShaderGUI
 {
     MaterialEditor materialEditor;
     MaterialProperty[] materialProperties;
@@ -20,7 +20,7 @@ internal class BlendTextures_Parallax_Shader_Editor : ShaderGUI
         EditorGUILayout.Space();
         DoBlendParams();
         EditorGUILayout.Space();
-        DoParallaxParams();
+        DoTessellationParams();
         EditorGUILayout.Space();
         DoSurfaceProperties();
     }
@@ -152,30 +152,15 @@ internal class BlendTextures_Parallax_Shader_Editor : ShaderGUI
         materialEditor.ShaderProperty(blendMode, new GUIContent("Blend mode"));
     }
 
-    private void DoParallaxParams()
+    private void DoTessellationParams()
     {
-        GUILayout.Label("Parallax parameters", EditorStyles.boldLabel);
+        GUILayout.Label("Tessellation", EditorStyles.boldLabel);
 
-        MaterialProperty parallaxType = FindProperty("_PlxType");
-        MaterialProperty parallaxAmount = FindProperty("_ParallaxAmt");
-        MaterialProperty iterativeParallaxNumIterations = FindProperty("_Iterations");
-        MaterialProperty pomMinSamples = FindProperty("_OcclusionMinSamples");
-        MaterialProperty pomMaxSamples = FindProperty("_OcclusionMaxSamples");
-        MaterialProperty clipSilhouette = FindProperty("_ClipSilhouette");
+        var tessellationFactor = FindProperty("_TessellationFactor");
+        var displacement = FindProperty("_VertDisplacement");
 
-        materialEditor.ShaderProperty(parallaxType, new GUIContent("Parallax type"));
-        materialEditor.ShaderProperty(parallaxAmount, new GUIContent("Parallax amount"));
-        if(parallaxType.floatValue == 1) //if using iterative  
-        {
-            materialEditor.ShaderProperty(iterativeParallaxNumIterations, new GUIContent("Iterations"));
-        }
-        else if(parallaxType.floatValue == 2) //if using POM
-        {
-            materialEditor.ShaderProperty(pomMinSamples, new GUIContent("Min samples"));
-            materialEditor.ShaderProperty(pomMaxSamples, new GUIContent("Max samples"));
-        }
-
-        materialEditor.ShaderProperty(clipSilhouette, new GUIContent("Clip silhouette"));
+        materialEditor.ShaderProperty(tessellationFactor, new GUIContent("Tessellation factor"));
+        materialEditor.ShaderProperty(displacement, new GUIContent("Displacement"));
     }
 
     private void DoSurfaceProperties()

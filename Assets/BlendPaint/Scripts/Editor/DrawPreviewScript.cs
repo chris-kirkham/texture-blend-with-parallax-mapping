@@ -6,7 +6,7 @@ namespace BlendPaint
 {
     public class DrawPreviewScript : MonoBehaviour
     {
-        public ComputeShader drawPreviewCompute;
+        [SerializeField] private ComputeShader drawPreviewCompute;
 
         public void DrawPreview(Vector2 uvPos, BlendBrush brush, Texture2D tex)
         {

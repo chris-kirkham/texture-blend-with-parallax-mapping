@@ -8,16 +8,32 @@ float2 ParallaxOffsetLimited(half heightmapHeight, half parallaxHeight, half3 ta
 	return heightmapHeight * (tangentViewDir.xy / tangentViewDir.z);
 }
 
-float2 IterativeParallaxOffset(float2 uv, half3 blendAmounts, sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, uniform float parallaxAmt, uniform int iterations, float3 tangentViewDir)
+float2 IterativeParallaxOffset(
+	float2 uv,
+	half3 blendAmounts,
+	sampler2D hmaps[4],
+	float hmapMults[4],
+	float hmapOffsets[4], 
+	int numHmaps, 
+	uniform float parallaxAmt, 
+	uniform int iterations, 
+	float3 tangentViewDir)
 {
 	float2 totalOffset = 0;
-
-	for (int i = 0; i < iterations; i++)
-	{
-		float2 offset = ParallaxOffsetLimited(GetBlendedHeight(hmaps, hmapMults, hmapOffsets, numHmaps, uv, blendAmounts), parallaxAmt, tangentViewDir);
-		totalOffset += offset;
-		uv += offset;
-	}
+    float heights[4];
+	
+    for (int i = 0; i < iterations; i++)
+    {
+		[unroll]
+        for (int j = 0; j < numHmaps; j++)
+        {
+            heights[j] = getAdjustedHeight(tex2D(hmaps[j], uv).r, hmapMults[j], hmapOffsets[j]);
+        }
+		
+        float2 offset = ParallaxOffsetLimited(getBlendedHeight(heights, numHmaps, blendAmounts), parallaxAmt, tangentViewDir);
+        totalOffset += offset;
+        uv += offset;
+    }
 
 	return totalOffset;
 }
@@ -111,8 +127,6 @@ float POMCalcShadow(float2 uv, float3 tangentLightDir, float sampleRatio, int mi
 }
 */
 
-
-
 float2 POM_test1
 (
 	float heightmapHeight,
@@ -194,6 +208,7 @@ float2 POM_test1
 	return currOffset;
 }
 
+/*
 float2 POM_test2
 (
 	float heightmapHeight,
@@ -244,6 +259,7 @@ float2 POM_test2
 	//return finalTexCoords;
 	return currUV;
 }
+*/
 
 float2 steepParallaxMapping
 (

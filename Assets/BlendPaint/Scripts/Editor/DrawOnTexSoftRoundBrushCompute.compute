@@ -7,9 +7,18 @@ float4 brushColour;
 uint brushHalfSize;
 float brushStrength;
 uint2 brushCentre;
+uint2 brushMin;
+uint texWidth;
+uint texHeight;
 
 Texture2D<float4> inputTex;
 RWTexture2D<float4> Result;
+
+//get the actual UV from the input id and min affected UV
+uint2 getUV(int2 id)
+{
+    return int2(min(id.x + brushMin.x, texWidth), min(id.y + brushMin.y, texHeight));
+}
 
 //get brush opacity based on given uv's distance from the brush centre and the brush size; gives the effect of a soft round brush
 float getBrushOpacity(uint2 uv)
@@ -20,17 +29,22 @@ float getBrushOpacity(uint2 uv)
 [numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
 void DrawOnTex_Normal(uint3 id : SV_DispatchThreadID)
 {
-    Result[id.xy] = lerp(inputTex[id.xy], brushColour, getBrushOpacity(id.xy) * saturate(brushStrength));
+    uint2 uv = getUV(id.xy);
+    Result[uv] = lerp(inputTex[uv], brushColour, getBrushOpacity(uv) * saturate(brushStrength));
+    //Result[uv] = float4(((float) id.x) / (brushHalfSize * 2), ((float) id.y) / (brushHalfSize * 2), 0.0f, 0.0f);
+    //Result[uv] = float4(((float) uv.x) / texWidth, ((float) uv.y) / texWidth, getBrushOpacity(uv), 0.0f);
 }
 
 [numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
 void DrawOnTex_Additive(uint3 id : SV_DispatchThreadID)
 {
-    Result[id.xy] = inputTex[id.xy] + (brushColour * getBrushOpacity(id.xy) * saturate(brushStrength));
+    uint2 uv = getUV(id.xy);
+    Result[uv] = inputTex[uv] + (brushColour * getBrushOpacity(uv) * saturate(brushStrength));
 }
 
 [numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
 void DrawOnTex_Subtractive(uint3 id : SV_DispatchThreadID)
 {
-    Result[id.xy] = inputTex[id.xy] - (brushColour * getBrushOpacity(id.xy) * saturate(brushStrength));
+    uint2 uv = getUV(id.xy);
+    Result[uv] = inputTex[uv] - (brushColour * getBrushOpacity(uv) * saturate(brushStrength));
 }

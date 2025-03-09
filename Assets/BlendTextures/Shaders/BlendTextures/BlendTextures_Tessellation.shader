@@ -1,4 +1,4 @@
-﻿Shader "BlendTextures/BlendTextures_Parallax" {
+Shader "BlendTextures/BlendTextures_Tessellated" {
 	Properties{
 		//Colours
 		_BaseTexColour("Base texture colour", Color) = (1,1,1,1)
@@ -7,7 +7,7 @@
 		_Tex3Colour("Texture 3 colour", Color) = (1,1,1,1)
 
 		//Textures
-		_BaseTex("Base albedo", 2D) = "red" {}
+		[MainTexture] _BaseTex("Base albedo", 2D) = "red" {}
 		[Normal] _BaseTexNormal("Base normal", 2D) = "white" {}
 		_BaseTexHRMA("Base HRMA", 2D) = "white" {}
 		_MainTex1("Tex 1", 2D) = "green" {}
@@ -39,36 +39,28 @@
 		[Range] _H2Offset("Tex 2 heightmap offset", Range(-1, 1)) = 0
 		[Range] _H3Offset("Tex 3 heightmap offset", Range(-1, 1)) = 0
 
-		//Parallax mapping)
-		[KeywordEnum(Offset, IterativeOffset, Occlusion)] _PlxType("Parallax mapping method", Float) = 0
-		[PowerSlider(4)] _ParallaxAmt("Parallax amount", Range(0, 0.5)) = 0.08
-		[IntRange] _Iterations("Iterations", Range(0, 10)) = 2
-		[IntRange] _OcclusionMinSamples("Minimum samples", Range(2, 100)) = 10
-		[IntRange] _OcclusionMaxSamples("Maximum samples", Range(2, 100)) = 20
-		[Toggle(CLIP_SILHOUETTE)] _ClipSilhouette("Clip silhouette", Float) = 0
-
-
 		//Surface properties
 		_AOStrength("AO strength", Range(0,1)) = 1.0
+
+		//Tessellation
+		_TessellationFactor ("Tessellation factor", Range(1, 32)) = 4
+		_VertDisplacement ("Displacement", Float) = 0.25
 	}
 		SubShader{
 			Tags { "RenderType" = "Opaque" }
 			LOD 200
 
 			CGPROGRAM
-			#pragma surface surf Standard fullforwardshadows vertex:vert
-			#pragma target 3.0
-			//#include "blends.cginc" //don't include this here if it's included in parallax.cginc
+			
+			#pragma surface surf Standard fullforwardshadows vertex:vert tessellate:tess
+			#pragma target 4.6
 			#include "parallax.cginc"
+			#include "Tessellation.cginc"
 
 			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL //height blend modes
-			#pragma shader_feature _PLXTYPE_OFFSET _PLXTYPE_ITERATIVEOFFSET _PLXTYPE_OCCLUSION //parallax offset methods
-			#pragma shader_feature CLIP_SILHOUETTE
 
 			struct Input {
-				float2 texcoord;
-				float3 tangentViewDir;
-				float sampleRatio;
+				float2 texcoord : TEXCOORD0;
 			};
 
 			/* textures */
@@ -86,53 +78,41 @@
 			sampler2D _BlendTex;
 			float _HeightBlendFactor;
 
-			/* parallax mapping */
-			float _PlxType;
-			float _ParallaxAmt;
-			float _Iterations;
-			int _OcclusionMinSamples, _OcclusionMaxSamples;
-			float _ClipSilhouette;
-
 			/* surface properties */
 			float4 _BaseTexColour, _Tex1Colour, _Tex2Colour, _Tex3Colour;
 			half _AOStrength;
 
-			void parallax_vert(
-				float4 vertex,
-				float3 normal,
-				float4 tangent,
-				out float3 tangentViewDir,
-				out float sampleRatio
-			) {
-				float4x4 mW = unity_ObjectToWorld;
-				float3 binormal = cross(normal, tangent.xyz) * tangent.w;
-				float3 EyePosition = _WorldSpaceCameraPos;
+			/* tessellation */
+			float _TessellationFactor;
+			float _VertDisplacement;
 
-				// Need to do it this way for W-normalisation and.. stuff.
-				float4 localCameraPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1));
-				float3 eyeLocal = vertex - localCameraPos;
-				float4 eyeGlobal = mul(float4(eyeLocal, 1), mW);
-				float3 E = eyeGlobal.xyz;
-
-				float3x3 tangentToWorldSpace;
-
-				tangentToWorldSpace[0] = mul(normalize(tangent), mW);
-				tangentToWorldSpace[1] = mul(normalize(binormal), mW);
-				tangentToWorldSpace[2] = mul(normalize(normal), mW);
-
-				float3x3 worldToTangentSpace = transpose(tangentToWorldSpace);
-
-				tangentViewDir = mul(E, worldToTangentSpace);
-				sampleRatio = 1 - dot(normalize(E), -normal);
+			float4 tess (appdata_full v0, appdata_full v1, appdata_full v2) {
+				float minDist = 10.0;
+                float maxDist = 25.0;
+                return UnityDistanceBasedTess(v0.vertex, v1.vertex, v2.vertex, minDist, maxDist, _TessellationFactor);
 			}
 
-			void vert(inout appdata_full IN, out Input OUT) {
-				parallax_vert(IN.vertex, IN.normal, IN.tangent, OUT.tangentViewDir, OUT.sampleRatio);
-				OUT.texcoord = IN.texcoord;
+			//void vert(inout appdata_full IN, out Input OUT) {
+			void vert(inout appdata_full IN) {
+				float4 uv = float4(IN.texcoord.xy, 0.0f, 0.0f);
+				float hBase = getAdjustedHeight(tex2Dlod(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
+				float h1 = getAdjustedHeight(tex2Dlod(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
+				float h2 = getAdjustedHeight(tex2Dlod(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
+				float h3 = getAdjustedHeight(tex2Dlod(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
+				float heights[4] = {hBase, h1, h2, h3};
+
+				sampler2D hmaps[4] = { _BaseTexHRMA, _Tex1HRMA, _Tex2HRMA, _Tex3HRMA };
+				float hmapMults[4] = { _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult };
+				float hmapOffsets[4] = { _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset };
+				half3 blendTex = tex2Dlod(_BlendTex, uv).rgb;
+				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
+				float blendedHeight = getBlendedHeight(heights, 4, blendAmounts);
+
+                IN.vertex.xyz += IN.normal * blendedHeight * _VertDisplacement;
+				//OUT.texcoord = IN.texcoord;
 			}
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
-
 				float2 uv = IN.texcoord;
 
 				//need to use the initial (non-parallax-offset) uv for the height; r/m/ao uses parallax uv
@@ -140,34 +120,13 @@
 				float h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
 				float h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
 				float h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
-				float heights[4] = { hBase, h1, h2, h3 };
-
+				float heights[4] = {hBase, h1, h2, h3};
+				
 				sampler2D hmaps[4] = { _BaseTexHRMA, _Tex1HRMA, _Tex2HRMA, _Tex3HRMA };
 				float hmapMults[4] = { _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult };
 				float hmapOffsets[4] = { _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset };
-				half3 blendTex = tex2D(_BlendTex, IN.texcoord).rgb;
+				half3 blendTex = tex2D(_BlendTex, uv).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
-
-				/* get UV offset based on selected parallax method */
-				//get UV offset
-				float2 offset = float2(0, 0);
-				#if defined(_PLXTYPE_OFFSET)
-					offset = ParallaxOffsetLimited(getBlendedHeight(heights, 4, blendAmounts), _ParallaxAmt, IN.tangentViewDir);
-				#elif defined(_PLXTYPE_ITERATIVEOFFSET)
-					offset = IterativeParallaxOffset(uv, blendAmounts, hmaps, hmapMults, hmapOffsets, 4, _ParallaxAmt, _Iterations, IN.tangentViewDir);
-				#elif defined(_PLXTYPE_OCCLUSION)
-					offset = POM(_ParallaxAmt, IN.tangentViewDir, IN.sampleRatio, IN.texcoord,
-						hmaps, hmapMults, hmapOffsets, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
-				#endif
-				uv += offset;
-
-				//update blendAmounts with parallax-mapped uv coords
-				blendTex = tex2D(_BlendTex, uv).rgb;
-				hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
-				h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
-				h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
-				h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
-				blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 
 				/* get other textures using parallax-mapped UVs */
 				half4 cBase = tex2D(_BaseTex, uv) * _BaseTexColour;
@@ -188,20 +147,15 @@
 				half3 rma3 = tex2D(_Tex3HRMA, uv).gba;
 
 				o.Albedo = getColFromBlendAmounts(cBase, c1, c2, c3, blendAmounts);
-				o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
-				o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
-				o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
-				o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);
-
-				//silhouette clipping - clip uv positions <0 and >1
-				#if defined(CLIP_SILHOUETTE)
-					clip(uv);
-					clip(1 - uv);
-				#endif
+				//o.Albedo = half4(uv.xy, 1.0, 1.0);
+				//o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
+				//o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
+				//o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
+				//o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);
 			}
 
 			ENDCG
 		}
 			FallBack "Diffuse"
-			CustomEditor "BlendTextures_Parallax_Shader_Editor"
+			//CustomEditor "BlendTexturesTessellatedInspector"
 }

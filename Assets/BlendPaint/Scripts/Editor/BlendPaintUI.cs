@@ -11,9 +11,16 @@ namespace BlendPaint
 {
     public class BlendPaintUI : EditorWindow
     {
+        private struct SelectedObject
+        {
+            public GameObject obj;
+            public Material mat;
+        }
+
         private BlendBrush brush;
         private BakeBlendScript bake;
 
+        private List<SelectedObject> selectedObjects;
         private GameObject selection; //selected object
         private Material selectionMaterial;
         private BlendTexUtils texUtils = new BlendTexUtils();
@@ -23,6 +30,9 @@ namespace BlendPaint
 
         //the texture drawing preview overwrites the selected material's blend map; the blend map is cached here after drawing so we can revert changes the preview made
         //private Texture2D drawPreviewCachedBlendTex;
+
+        //render texture to write the compute paint output to
+        private RenderTexture resultRenderTex;
 
         /* GUI LAYOUT PARAMETERS */
         private readonly GUILayoutOption[] textureButtonParams = new GUILayoutOption[]
@@ -94,10 +104,21 @@ namespace BlendPaint
 
         void OnSelectionChange()
         {
+            var numSelected = Selection.gameObjects.Length;
+
             //if user has selected multiple objects, find the first one with a compatible shader (if any)
             //TODO: allow multiple selections if they all use the same textures?
-            if (Selection.gameObjects.Length > 1)
+            if (numSelected > 1)
             {
+                if(selectedObjects != null)
+                {
+                    selectedObjects.Clear();
+                }
+                else
+                {
+                    selectedObjects = new List<SelectedObject>(numSelected);
+                }
+
                 foreach (GameObject obj in Selection.gameObjects)
                 {
                     Renderer r = obj.GetComponent<Renderer>();
@@ -108,13 +129,17 @@ namespace BlendPaint
                         {
                             selection = obj;
                             selectionMaterial = m;
-                            break;
+                            selectedObjects.Add(new SelectedObject()
+                            {
+                                obj = obj,
+                                mat = m
+                            });
                         }
                     }
 
                 }
             }
-            else if (Selection.gameObjects.Length == 1)
+            else if (numSelected == 1)
             {
                 Renderer r = Selection.activeTransform.GetComponent<Renderer>();
                 if (r != null)
@@ -188,6 +213,8 @@ namespace BlendPaint
         private void UI_DoSetOrCreateBlendTex()
         {
             EditorGUILayout.LabelField("Blend map", headerLabelStyle);
+            
+            EditorGUI.BeginChangeCheck();
             EditorGUILayout.BeginHorizontal();
             {
                 //select existing blend tex
@@ -219,6 +246,19 @@ namespace BlendPaint
                 }
             }
             EditorGUILayout.EndHorizontal();
+            if(EditorGUI.EndChangeCheck())
+            {
+                //if blend texture changed, remake compute output render texture
+                var blendTex = selectionMaterial.GetTexture("_BlendTex");
+                CreateOutputRenderTexture(blendTex.width, blendTex.height);
+            }
+        }
+
+        private void CreateOutputRenderTexture(int width, int height)
+        {
+            resultRenderTex = new RenderTexture(width, height, 1);
+            resultRenderTex.enableRandomWrite = true;
+            resultRenderTex.Create();
         }
 
         private void UI_DoSetBrushProperties()
@@ -299,7 +339,10 @@ namespace BlendPaint
                             Undo.RegisterCompleteObjectUndo(tex, "Paint on blend texture");
                         }
 
-                        if (tex != null) DrawOnTex(uvPos, tex);
+                        if (tex != null)
+                        {
+                           DrawOnTex(uvPos, tex);
+                        }
                     }
                 }
                 
@@ -354,35 +397,58 @@ namespace BlendPaint
                     drawOnTexKernelHandle = drawOnTexCompute.FindKernel("DrawOnTex_Normal");
                     break;
             }
-            
-            //threads
-            const int GROUP_SIZE = 8; //must be same as in the compute shader
-            int threadGroupsX = tex.width / GROUP_SIZE;
-            int threadGroupsY = tex.height / GROUP_SIZE;
 
-            //RenderTexture to write result to
-            RenderTexture result = new RenderTexture(tex.width, tex.height, 1);
-            result.enableRandomWrite = true;
-            result.Create();
-            
+            //create render texture if none exists
+            if(!resultRenderTex || !resultRenderTex.IsCreated())
+            {
+                CreateOutputRenderTexture(tex.width, tex.height);
+            }
+
             //set compute shader parameters
             drawOnTexCompute.SetFloats("brushColour", new float[4] { brush.ActiveCol[0], brush.ActiveCol[1], brush.ActiveCol[2], brush.ActiveCol[3] });
             drawOnTexCompute.SetInt("brushHalfSize", brush.HalfSize);
             drawOnTexCompute.SetFloat("brushStrength", brush.Strength);
-            int[] brushCentre = new int[2] { Mathf.FloorToInt(uvPos.x * tex.width), Mathf.FloorToInt(uvPos.y * tex.height) };
+            int[] brushCentre = new int[2] 
+            { 
+                Mathf.FloorToInt(uvPos.x * tex.width),
+                Mathf.FloorToInt(uvPos.y * tex.height) 
+            };
+            int[] brushMin = new int[2]
+            {
+                Mathf.Max(0, brushCentre[0] - brush.HalfSize),
+                Mathf.Max(0, brushCentre[1] - brush.HalfSize)
+            };
             drawOnTexCompute.SetInts("brushCentre", brushCentre);
+            drawOnTexCompute.SetInts("brushMin", brushMin);
             drawOnTexCompute.SetTexture(drawOnTexKernelHandle, "inputTex", tex);
-            drawOnTexCompute.SetTexture(drawOnTexKernelHandle, "Result", result);
+            drawOnTexCompute.SetInts("texWidth", tex.width);
+            drawOnTexCompute.SetInts("texHeight", tex.height);
+            drawOnTexCompute.SetTexture(drawOnTexKernelHandle, "Result", resultRenderTex);
+
+            //threads
+            const int GROUP_SIZE = 8; //must be same as in the compute shader
+            //int threadGroupsX = tex.width / GROUP_SIZE;
+            //int threadGroupsY = tex.height / GROUP_SIZE;
+            int threadGroupsX = Mathf.Max(1, brush.Size / GROUP_SIZE);
+            int threadGroupsY = Mathf.Max(1, brush.Size / GROUP_SIZE);
 
             //dispatch
             drawOnTexCompute.Dispatch(drawOnTexKernelHandle, threadGroupsX, threadGroupsY, 1);
             
             //write result render texture to blend tex
-            RenderTexture.active = result;
+            RenderTexture.active = resultRenderTex;
+
+            //TODO: WRONG
+            /*
+            var rectMinX = Mathf.Max(0, brushCentre[0] - brush.HalfSize);
+            var rectMinY = Mathf.Max(0, brushCentre[1] - brush.HalfSize);
+            var rectMaxX = Mathf.Min(tex.width, brushCentre[0] + brush.HalfSize);
+            var rectMaxY = Mathf.Min(tex.height, brushCentre[1] + brush.HalfSize);
+            tex.ReadPixels(new Rect(rectMinX, rectMinY, rectMaxX, rectMaxY), rectMinX, rectMinY); 
+            */
             tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
             tex.Apply();
             Repaint();
-            
         }
 
         /*

@@ -141,58 +141,81 @@ float getBlendedHeightBlendAll
 	return (hBase * bBase) + (h1 * blendAmounts.r) + (h2 * blendAmounts.g) + (h3 * blendAmounts.b);
 }
 
-float getBlendedHeightBlendAll(sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, float2 uv, half3 blendAmounts)
+float getBlendedHeightBlendAll(float heights[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, half3 blendAmounts)
 {
 	//initialise with base height
-	float blendedHeight = getAdjustedHeight(tex2D(hmaps[0], uv).r, hmapMults[0], hmapOffsets[0]) * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
+    float blendedHeight = getAdjustedHeight(heights[0], hmapMults[0], hmapOffsets[0]) * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
 
 	[unroll]
 	for (int i = 1; i < numHmaps; i++)
 	{
-		blendedHeight += getAdjustedHeight(tex2D(hmaps[i], uv).r, hmapMults[i], hmapOffsets[i]) * blendAmounts[i - 1];
+        blendedHeight += getAdjustedHeight(heights[i], hmapMults[i], hmapOffsets[i]) * blendAmounts[i - 1];
+    }
+
+	return blendedHeight;
+}
+
+float getBlendedHeightAddToBase(float heights[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, half3 blendAmounts)
+{
+	//initialise with base height
+	float blendedHeight = getAdjustedHeight(heights[0], hmapMults[0], hmapOffsets[0]);
+
+	[unroll]
+	for (int i = 1; i < numHmaps; i++)
+	{
+		blendedHeight += getAdjustedHeight(heights[i], hmapMults[i], hmapOffsets[i]) * blendAmounts[i - 1];
 	}
 
 	return blendedHeight;
 }
 
-float getBlendedHeightAddToBase(sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, float2 uv, half3 blendAmounts)
+float getBlendedHeightAddAll(float heights[4], float hmapMults[4], float hmapOffsets[4], int numHmaps)
 {
 	//initialise with base height
-	float blendedHeight = getAdjustedHeight(tex2D(hmaps[0], uv).r, hmapMults[0], hmapOffsets[0]);
+	float blendedHeight = getAdjustedHeight(heights[0], hmapMults[0], hmapOffsets[0]);
 
 	[unroll]
 	for (int i = 1; i < numHmaps; i++)
 	{
-		blendedHeight += getAdjustedHeight(tex2D(hmaps[i], uv).r, hmapMults[i], hmapOffsets[i]) * blendAmounts[i - 1];
+		blendedHeight += getAdjustedHeight(heights[i], hmapMults[i], hmapOffsets[i]);
 	}
 
 	return blendedHeight;
 }
 
-float getBlendedHeightAddAll(sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, float2 uv)
-{
-	//initialise with base height
-	float blendedHeight = getAdjustedHeight(tex2D(hmaps[0], uv).r, hmapMults[0], hmapOffsets[0]);
-
-	[unroll]
-	for (int i = 1; i < numHmaps; i++)
-	{
-		blendedHeight += getAdjustedHeight(tex2D(hmaps[i], uv).r, hmapMults[i], hmapOffsets[i]);
-	}
-
-	return blendedHeight;
-}
-
-//returns blended height based on input maps and defined height blend mode
-float GetBlendedHeight(sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, float2 uv, half3 blendAmounts)
+//returns blended height based on input maps and defined height blend mode - takes in "raw" heights and adjusts them by their multipliers/offsets
+float getBlendedHeight(float heights[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, half3 blendAmounts)
 {
 #if defined(_HEIGHTBLENDMODE_ADDTOBASE)
-	return getBlendedHeightAddToBase(hmaps, hmapMults, hmapOffsets, numHmaps, uv, blendAmounts).r;
+	return getBlendedHeightAddToBase(heights, hmapMults, hmapOffsets, numHmaps, blendAmounts).r;
 #elif defined(_HEIGHTBLENDMODE_ADDALL)
-	return getBlendedHeightAddAll(hmaps, hmapMults, hmapOffsets, numHmaps, uv).r;
+	return getBlendedHeightAddAll(heights, hmapMults, hmapOffsets, numHmaps).r;
 #else //blend all
-	return getBlendedHeightBlendAll(hmaps, hmapMults, hmapOffsets, numHmaps, uv, blendAmounts).r;
+    return getBlendedHeightBlendAll(heights, hmapMults, hmapOffsets, numHmaps, blendAmounts).r;
 #endif 
+}
+
+float getBlendedHeight(float heights[4], int numHmaps, half3 blendAmounts)
+{
+	//get blended base height
+#if defined(_HEIGHTBLENDMODE_ADDTOBASE)
+	float blendedHeight = heights[0] * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
+#else //ADDALL or BLENDALL
+    float blendedHeight = heights[0];
+#endif
+	
+	//get blended remaining heights
+	[unroll]
+    for (int i = 1; i < numHmaps; i++)
+    {
+#if defined(_HEIGHTBLENDMODE_ADDALL)
+		blendedHeight += heights[i];
+#else //ADDTOBASE or BLENDALL
+        blendedHeight += heights[i] * blendAmounts[i - 1];
+#endif
+    }
+	
+    return blendedHeight;
 }
 
 /*
