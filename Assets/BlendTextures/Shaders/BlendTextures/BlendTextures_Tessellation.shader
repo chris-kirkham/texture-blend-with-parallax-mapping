@@ -94,22 +94,43 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
                 return UnityDistanceBasedTess(v0.vertex, v1.vertex, v2.vertex, minDist, maxDist, _TessellationFactor);
 			}
 
-			void vert(inout appdata_full IN) {
-				float4 uv = float4(IN.texcoord.xy, 0.0f, 0.0f);
-				float hBase = getAdjustedHeight(tex2Dlod(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
-				float h1 = getAdjustedHeight(tex2Dlod(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
-				float h2 = getAdjustedHeight(tex2Dlod(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
-				float h3 = getAdjustedHeight(tex2Dlod(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
+			float getBlendedHeight_Vert(float2 uv)
+			{
+				float4 uvLod = float4(uv.xy, 0.0f, 0.0f);
+
+				float hBase = getAdjustedHeight(tex2Dlod(_BaseTexHRMA, uvLod).r, _BaseTexHeightMult, _BaseHeightOffset);
+				float h1 = getAdjustedHeight(tex2Dlod(_Tex1HRMA, uvLod).r, _H1Mult, _H1Offset);
+				float h2 = getAdjustedHeight(tex2Dlod(_Tex2HRMA, uvLod).r, _H2Mult, _H2Offset);
+				float h3 = getAdjustedHeight(tex2Dlod(_Tex3HRMA, uvLod).r, _H3Mult, _H3Offset);
 				float heights[4] = {hBase, h1, h2, h3};
 
 				sampler2D hmaps[4] = { _BaseTexHRMA, _Tex1HRMA, _Tex2HRMA, _Tex3HRMA };
-				float hmapMults[4] = { _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult };
-				float hmapOffsets[4] = { _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset };
-				half3 blendTex = tex2Dlod(_BlendTex, uv).rgb;
+				half3 blendTex = tex2Dlod(_BlendTex, uvLod).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
-				float blendedHeight = getBlendedHeight(heights, 4, blendAmounts);
+				
+				return getBlendedHeight(heights, 4, blendAmounts);
+			}
+
+			void vert(inout appdata_full IN) {
+				float2 uv = IN.texcoord;
+				float blendedHeight = getBlendedHeight_Vert(uv);
+
+				/*
+				//Get height-adjusted normals - TODO: WRONG - seems to shade wrong side of things sometimes
+				//https://www.alanzucconi.com/2019/07/03/interactive-map-shader-terrain-shading/
+				const float offset = 0.01f;
+				float blendedHeight_PlusX = getBlendedHeight_Vert(uv + float2(offset, 0.0f));
+				float blendedHeight_PlusZ = getBlendedHeight_Vert(uv + float2(0.0f, offset));
+				float4 offsetVertex = IN.vertex + float4(0, blendedHeight, 0, 0);
+				float4 bitangent = IN.vertex + float4(offset, blendedHeight_PlusX, 0, 0);
+				float4 tangent = IN.vertex + float4(0, blendedHeight_PlusZ, offset, 0);
+				float3 newBitangent = (bitangent - offsetVertex).xyz;
+				float3 newTangent = (tangent - offsetVertex).xyz;
+				float3 normal = normalize(cross(newTangent, newBitangent));
+				*/
 
                 IN.vertex.xyz += (IN.normal * blendedHeight * _VertDisplacement) + (IN.normal * _DisplacementOffset * _VertDisplacement);
+				//IN.normal = normal;
 			}
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
@@ -147,11 +168,10 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 				half3 rma3 = tex2D(_Tex3HRMA, uv).gba;
 
 				o.Albedo = getColFromBlendAmounts(cBase, c1, c2, c3, blendAmounts);
-				//o.Albedo = half4(uv.xy, 1.0, 1.0);
 				//o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
-				//o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
-				//o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
-				//o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);
+				o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
+				o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
+				o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);
 			}
 
 			ENDCG

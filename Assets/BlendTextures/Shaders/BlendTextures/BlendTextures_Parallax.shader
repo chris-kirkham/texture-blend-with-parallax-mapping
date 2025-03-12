@@ -10,15 +10,19 @@
 		_BaseTex("Base albedo", 2D) = "red" {}
 		[Normal] _BaseTexNormal("Base normal", 2D) = "white" {}
 		_BaseTexHRMA("Base HRMA", 2D) = "white" {}
+		_BaseTexTiling("Base tiling", Float) = 1
 		_MainTex1("Tex 1", 2D) = "green" {}
 		[Normal] _Tex1Normal("Tex 1 normal", 2D) = "white" {}
 		_Tex1HRMA("Tex 1 HRMA", 2D) = "white" {}
+		_Tex1Tiling("Tex 1tiling", Float) = 1
 		_MainTex2("Tex 2", 2D) = "green" {}
 		[Normal] _Tex2Normal("Tex 2 normal", 2D) = "white" {}
 		_Tex2HRMA("Tex 2 HRMA", 2D) = "white" {}
+		_Tex2Tiling("Tex 2 tiling", Float) = 1
 		_MainTex3("Tex 3", 2D) = "green" {}
 		[Normal] _Tex3Normal("Tex 3 normal", 2D) = "white" {}
 		_Tex3HRMA("Tex 3 HRMA", 2D) = "white" {}
+		_Tex3Tiling("Tex 3 tiling", Float) = 1
 
 		//[KeywordEnum(None, Add, Multiply)] _Overlay("Overlay mode", Float) = 0 //consider using KeywordEnum for more than on/off keywords
 		//see https://docs.unity3d.com/ScriptReference/MaterialPropertyDrawer.html - Unity turns KeywordEnums into keyword names in this format: 
@@ -72,10 +76,24 @@
 			};
 
 			/* textures */
-			sampler2D _BaseTex, _BaseTexNormal, _BaseTexHRMA;
-			sampler2D _MainTex1, _Tex1Normal, _Tex1HRMA;
-			sampler2D _MainTex2, _Tex2Normal, _Tex2HRMA;
-			sampler2D _MainTex3, _Tex3Normal, _Tex3HRMA;
+			UNITY_DECLARE_TEX2D(_BaseTex);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_BaseTexNormal);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_BaseTexHRMA);
+			
+			UNITY_DECLARE_TEX2D(_MainTex1);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_Tex1Normal);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_Tex1HRMA);
+			
+			UNITY_DECLARE_TEX2D(_MainTex2);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_Tex2Normal);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_Tex2HRMA);
+
+			UNITY_DECLARE_TEX2D(_MainTex3);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_Tex3Normal);
+			UNITY_DECLARE_TEX2D_NOSAMPLER(_Tex3HRMA);
+
+			/* texture tiling */
+			float _BaseTexTiling, _Tex1Tiling, _Tex2Tiling, _Tex3Tiling;
 
 			/* heightmap adjust params */
 			float _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult;
@@ -104,23 +122,22 @@
 				out float3 tangentViewDir,
 				out float sampleRatio
 			) {
+				//get world-to-tangent matrix
 				float4x4 mW = unity_ObjectToWorld;
 				float3 binormal = cross(normal, tangent.xyz) * tangent.w;
-				float3 EyePosition = _WorldSpaceCameraPos;
+				float3x3 tangentToWorldSpace;
+				tangentToWorldSpace[0] = mul(normalize(tangent), mW);
+				tangentToWorldSpace[1] = mul(normalize(binormal), mW);
+				tangentToWorldSpace[2] = mul(normalize(normal), mW);
+				float3x3 worldToTangentSpace = transpose(tangentToWorldSpace);
 
+				//get view direction
 				// Need to do it this way for W-normalisation and.. stuff.
+				float3 EyePosition = _WorldSpaceCameraPos;
 				float4 localCameraPos = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1));
 				float3 eyeLocal = vertex - localCameraPos;
 				float4 eyeGlobal = mul(float4(eyeLocal, 1), mW);
 				float3 E = eyeGlobal.xyz;
-
-				float3x3 tangentToWorldSpace;
-
-				tangentToWorldSpace[0] = mul(normalize(tangent), mW);
-				tangentToWorldSpace[1] = mul(normalize(binormal), mW);
-				tangentToWorldSpace[2] = mul(normalize(normal), mW);
-
-				float3x3 worldToTangentSpace = transpose(tangentToWorldSpace);
 
 				tangentViewDir = mul(E, worldToTangentSpace);
 				sampleRatio = 1 - dot(normalize(E), -normal);
@@ -133,23 +150,27 @@
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 
+				//get raw and scaled UVs
 				float2 uv = IN.texcoord;
+				float2 baseUV = uv * _BaseTexTiling;
+				float2 tex1UV = uv * _Tex1Tiling;
+				float2 tex2UV = uv * _Tex2Tiling;
+				float2 tex3UV = uv * _Tex3Tiling;
 
 				//need to use the initial (non-parallax-offset) uv for the height; r/m/ao uses parallax uv
-				float hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
-				float h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
-				float h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
-				float h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
+				float hBase = getAdjustedHeight(UNITY_SAMPLE_TEX2D_SAMPLER(_BaseTexHRMA, _BaseTex, baseUV).r, _BaseTexHeightMult, _BaseHeightOffset);
+				float h1 = getAdjustedHeight(UNITY_SAMPLE_TEX2D_SAMPLER(_Tex1HRMA, _MainTex1, tex1UV).r, _H1Mult, _H1Offset);
+				float h2 = getAdjustedHeight(UNITY_SAMPLE_TEX2D_SAMPLER(_Tex2HRMA, _MainTex2, tex2UV).r, _H2Mult, _H2Offset);
+				float h3 = getAdjustedHeight(UNITY_SAMPLE_TEX2D_SAMPLER(_Tex3HRMA, _MainTex3, tex3UV).r, _H3Mult, _H3Offset);
 				float heights[4] = { hBase, h1, h2, h3 };
 
 				sampler2D hmaps[4] = { _BaseTexHRMA, _Tex1HRMA, _Tex2HRMA, _Tex3HRMA };
 				float hmapMults[4] = { _BaseTexHeightMult, _H1Mult, _H2Mult, _H3Mult };
 				float hmapOffsets[4] = { _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset };
-				half3 blendTex = tex2D(_BlendTex, IN.texcoord).rgb;
+				half3 blendTex = tex2D(_BlendTex, uv).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
-
-				/* get UV offset based on selected parallax method */
-				//get UV offset
+				/*
+				//get parallax-mapped UV offset based on selected parallax method
 				float2 offset = float2(0, 0);
 				#if defined(_PLXTYPE_OFFSET)
 					offset = ParallaxOffsetLimited(getBlendedHeight(heights, 4, blendAmounts), _ParallaxAmt, IN.tangentViewDir);
@@ -160,38 +181,44 @@
 						hmaps, hmapMults, hmapOffsets, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
 				#endif
 				uv += offset;
+				*/
 
-				//update blendAmounts with parallax-mapped uv coords
+				//update tiled UVs
+				baseUV = uv * _BaseTexTiling;
+				tex1UV = uv * _Tex1Tiling;
+				tex2UV = uv * _Tex2Tiling;
+				tex3UV = uv * _Tex3Tiling;
+
+				//resample textures using parallax-mapped UVs
+				fixed4 hrmaBase = UNITY_SAMPLE_TEX2D_SAMPLER(_BaseTexHRMA, _BaseTex, baseUV);
+				fixed4 hrma1 = UNITY_SAMPLE_TEX2D_SAMPLER(_Tex1HRMA, _MainTex1, tex1UV);
+				fixed4 hrma2 = UNITY_SAMPLE_TEX2D_SAMPLER(_Tex2HRMA, _MainTex2, tex2UV);
+				fixed4 hrma3 = UNITY_SAMPLE_TEX2D_SAMPLER(_Tex3HRMA, _MainTex3, tex3UV);
+
+				hBase = getAdjustedHeight(hrmaBase.r, _BaseTexHeightMult, _BaseHeightOffset);
+				h1 = getAdjustedHeight(hrma1.r, _H1Mult, _H1Offset);
+				h2 = getAdjustedHeight(hrma2.r, _H2Mult, _H2Offset);
+				h3 = getAdjustedHeight(hrma3.r, _H3Mult, _H3Offset);
+
+				half4 cBase = UNITY_SAMPLE_TEX2D(_BaseTex, baseUV) * _BaseTexColour;
+				half4 c1 = UNITY_SAMPLE_TEX2D(_MainTex1, tex1UV) * _Tex1Colour;
+				half4 c2 = UNITY_SAMPLE_TEX2D(_MainTex2, tex2UV) * _Tex2Colour;
+				half4 c3 = UNITY_SAMPLE_TEX2D(_MainTex3, tex3UV) * _Tex3Colour;
+
+				half3 nBase = UnpackNormal(UNITY_SAMPLE_TEX2D_SAMPLER(_BaseTexNormal, _BaseTex, baseUV));
+				half3 n1 = UnpackNormal(UNITY_SAMPLE_TEX2D_SAMPLER(_Tex1Normal, _MainTex1, tex1UV));
+				half3 n2 = UnpackNormal(UNITY_SAMPLE_TEX2D_SAMPLER(_Tex2Normal, _MainTex2, tex2UV));
+				half3 n3 = UnpackNormal(UNITY_SAMPLE_TEX2D_SAMPLER(_Tex3Normal, _MainTex3, tex3UV));
+
+				//update blend amounts with parallax-mapped UVs
 				blendTex = tex2D(_BlendTex, uv).rgb;
-				hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
-				h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
-				h2 = getAdjustedHeight(tex2D(_Tex2HRMA, uv).r, _H2Mult, _H2Offset);
-				h3 = getAdjustedHeight(tex2D(_Tex3HRMA, uv).r, _H3Mult, _H3Offset);
 				blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
-
-				/* get other textures using parallax-mapped UVs */
-				half4 cBase = tex2D(_BaseTex, uv) * _BaseTexColour;
-				half4 c1 = tex2D(_MainTex1, uv) * _Tex1Colour;
-				half4 c2 = tex2D(_MainTex2, uv) * _Tex2Colour;
-				half4 c3 = tex2D(_MainTex3, uv) * _Tex3Colour;
-
-				half3 nBase = UnpackNormal(tex2D(_BaseTexNormal, uv));
-				half3 n1 = UnpackNormal(tex2D(_Tex1Normal, uv));
-				half3 n2 = UnpackNormal(tex2D(_Tex2Normal, uv));
-				half3 n3 = UnpackNormal(tex2D(_Tex3Normal, uv));
-
-				//r/m/ao maps
-				//don't need height anymore so it becomes r = roughness, g = metallic, b = AO
-				half3 rmaBase = tex2D(_BaseTexHRMA, uv).gba;
-				half3 rma1 = tex2D(_Tex1HRMA, uv).gba;
-				half3 rma2 = tex2D(_Tex2HRMA, uv).gba;
-				half3 rma3 = tex2D(_Tex3HRMA, uv).gba;
 
 				o.Albedo = getColFromBlendAmounts(cBase, c1, c2, c3, blendAmounts);
 				o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
-				o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
-				o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
-				o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);
+				o.Smoothness = getColFromBlendAmounts(1 - hrmaBase.g, 1 - hrma1.g, 1 - hrma2.g, 1 - hrma3.g, blendAmounts);
+				o.Metallic = getColFromBlendAmounts(hrmaBase.b, hrma1.b, hrma2.b, hrma3.b, blendAmounts);
+				o.Occlusion = (getColFromBlendAmounts(hrmaBase.a, hrma1.a, hrma2.a, hrma3.a, blendAmounts) * _AOStrength) + (1 - _AOStrength);
 
 				//silhouette clipping - clip uv positions <0 and >1
 				#if defined(CLIP_SILHOUETTE)

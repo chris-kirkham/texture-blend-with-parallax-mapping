@@ -11,7 +11,7 @@ public class MoveBackAndForth : MonoBehaviour
 
     private bool direction = false; //false = moving from min to max, true = moving from max to min
 
-    void Update()
+    void LateUpdate()
     {
         currMoveTime += Time.deltaTime;
         if(currMoveTime >= moveTime)

@@ -30,9 +30,4 @@ void BakeBlend (uint3 id : SV_DispatchThreadID)
     BlendedAlbedo[uv] = getColFromBlendAmounts(baseAlbedo[uv], tex1Albedo[uv], tex2Albedo[uv], tex3Albedo[uv], blendAmounts); //albedo
     BlendedHRMA[uv] = getColFromBlendAmounts(baseHRMA[uv], tex1HRMA[uv], tex2HRMA[uv], tex3HRMA[uv], blendAmounts); //height/metallic/roughness/AO
     BlendedNormal[uv] = getColFromBlendAmounts(baseNormal[uv], tex1Normal[uv], tex2Normal[uv], tex3Normal[uv], blendAmounts); //normal
-
-    //TEST
-    BlendedAlbedo[id.xy] = float4(1, 0, 0, 1);
-    BlendedHRMA[id.xy] = float4(0, 1, 0, 1);
-    BlendedNormal[id.xy] = float3(0, 0, 1);
 }

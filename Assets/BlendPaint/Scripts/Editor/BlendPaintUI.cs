@@ -166,21 +166,16 @@ namespace BlendPaint
             if (selectionMaterial == null)
             {
                 EditorGUILayout.LabelField("No compatible object selected", headerLabelStyle);
+                return;
             }
-            else
-            {
-                UI_DoSelectTexture();
 
-                EditorGUILayout.Space();
-
-                UI_DoSetOrCreateBlendTex();                
-
-                EditorGUILayout.Space();
-
-                UI_DoSetBrushProperties();
-
-                //UI_DoBakeTextureMaps();
-            }
+            UI_DoSelectTexture();
+            EditorGUILayout.Space();
+            UI_DoSetOrCreateBlendTex();                
+            EditorGUILayout.Space();
+            UI_DoSetBrushProperties();
+            EditorGUILayout.Space();
+            UI_DoBakeTextureMaps();
         }
 
         private void UI_DoSelectTexture()
