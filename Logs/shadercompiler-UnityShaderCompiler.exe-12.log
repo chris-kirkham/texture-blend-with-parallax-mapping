@@ -2,5 +2,5 @@ Base path: 'C:/Program Files/Unity/Hub/Editor/6000.0.34f1/Editor/Data', plugins 
 Cmd: initializeCompiler
 
 Cmd: disassembleShader
- name=Standard platform=d3d11 type=15 mask=6 insize=2394 outsize=3924 ok=1
+ name=Standard platform=d3d11 type=15 mask=6 insize=2110 outsize=3565 ok=1
 

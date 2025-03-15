@@ -73,7 +73,6 @@ half3 getBlendAmounts(float hBase, float h1, float h2, float h3, half3 blend, fl
 }
 */
 
-
 /*----getColFromBlendAmounts----*/
 //adds each input colour together proportional to their respective blend amounts (as per getBlendAmounts())
 

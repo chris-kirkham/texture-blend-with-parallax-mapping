@@ -14,7 +14,7 @@
 		_MainTex1("Tex 1", 2D) = "green" {}
 		[Normal] _Tex1Normal("Tex 1 normal", 2D) = "white" {}
 		_Tex1HRMA("Tex 1 HRMA", 2D) = "white" {}
-		_Tex1Tiling("Tex 1tiling", Float) = 1
+		_Tex1Tiling("Tex 1 tiling", Float) = 1
 		_MainTex2("Tex 2", 2D) = "green" {}
 		[Normal] _Tex2Normal("Tex 2 normal", 2D) = "white" {}
 		_Tex2HRMA("Tex 2 HRMA", 2D) = "white" {}
@@ -51,7 +51,6 @@
 		[IntRange] _OcclusionMaxSamples("Maximum samples", Range(2, 100)) = 20
 		[Toggle(CLIP_SILHOUETTE)] _ClipSilhouette("Clip silhouette", Float) = 0
 
-
 		//Surface properties
 		_AOStrength("AO strength", Range(0,1)) = 1.0
 	}
@@ -61,8 +60,8 @@
 
 			CGPROGRAM
 			#pragma surface surf Standard fullforwardshadows vertex:vert
-			#pragma target 3.0
-			//#include "blends.cginc" //don't include this here if it's included in parallax.cginc
+			#pragma target 4.6
+			#include "HLSLSupport.cginc"
 			#include "parallax.cginc"
 
 			#pragma shader_feature _HEIGHTBLENDMODE_BLENDALL _HEIGHTBLENDMODE_ADDTOBASE _HEIGHTBLENDMODE_ADDALL //height blend modes
@@ -169,19 +168,18 @@
 				float hmapOffsets[4] = { _BaseHeightOffset, _H1Offset, _H2Offset, _H3Offset };
 				half3 blendTex = tex2D(_BlendTex, uv).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
-				/*
+
 				//get parallax-mapped UV offset based on selected parallax method
 				float2 offset = float2(0, 0);
 				#if defined(_PLXTYPE_OFFSET)
 					offset = ParallaxOffsetLimited(getBlendedHeight(heights, 4, blendAmounts), _ParallaxAmt, IN.tangentViewDir);
-				#elif defined(_PLXTYPE_ITERATIVEOFFSET)
-					offset = IterativeParallaxOffset(uv, blendAmounts, hmaps, hmapMults, hmapOffsets, 4, _ParallaxAmt, _Iterations, IN.tangentViewDir);
-				#elif defined(_PLXTYPE_OCCLUSION)
-					offset = POM(_ParallaxAmt, IN.tangentViewDir, IN.sampleRatio, IN.texcoord,
-						hmaps, hmapMults, hmapOffsets, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
+//				#elif defined(_PLXTYPE_ITERATIVEOFFSET)
+//					offset = IterativeParallaxOffset(uv, blendAmounts, hmaps, hmapMults, hmapOffsets, 4, _ParallaxAmt, _Iterations, IN.tangentViewDir);
+//				#elif defined(_PLXTYPE_OCCLUSION)
+//					offset = POM(_ParallaxAmt, IN.tangentViewDir, IN.sampleRatio, IN.texcoord,
+//						hmaps, hmapMults, hmapOffsets, _BlendTex, _HeightBlendFactor, _OcclusionMinSamples, _OcclusionMaxSamples);
 				#endif
 				uv += offset;
-				*/
 
 				//update tiled UVs
 				baseUV = uv * _BaseTexTiling;
@@ -215,10 +213,10 @@
 				blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 
 				o.Albedo = getColFromBlendAmounts(cBase, c1, c2, c3, blendAmounts);
-				o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
-				o.Smoothness = getColFromBlendAmounts(1 - hrmaBase.g, 1 - hrma1.g, 1 - hrma2.g, 1 - hrma3.g, blendAmounts);
-				o.Metallic = getColFromBlendAmounts(hrmaBase.b, hrma1.b, hrma2.b, hrma3.b, blendAmounts);
-				o.Occlusion = (getColFromBlendAmounts(hrmaBase.a, hrma1.a, hrma2.a, hrma3.a, blendAmounts) * _AOStrength) + (1 - _AOStrength);
+				o.Normal = blendNormalMaps(nBase, n1, n2, n3, blendAmounts);
+				//o.Smoothness = getColFromBlendAmounts(1 - hrmaBase.g, 1 - hrma1.g, 1 - hrma2.g, 1 - hrma3.g, blendAmounts);
+				//o.Metallic = getColFromBlendAmounts(hrmaBase.b, hrma1.b, hrma2.b, hrma3.b, blendAmounts);
+				//o.Occlusion = (getColFromBlendAmounts(hrmaBase.a, hrma1.a, hrma2.a, hrma3.a, blendAmounts) * _AOStrength) + (1 - _AOStrength);
 
 				//silhouette clipping - clip uv positions <0 and >1
 				#if defined(CLIP_SILHOUETTE)
@@ -230,5 +228,5 @@
 			ENDCG
 		}
 			FallBack "Diffuse"
-			CustomEditor "BlendTextures_Parallax_Shader_Editor"
+			//CustomEditor "BlendTextures_Parallax_Shader_Editor"
 }

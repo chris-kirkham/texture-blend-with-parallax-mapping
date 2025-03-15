@@ -18,6 +18,28 @@ Texture2D<float3> blendMap;
 //blend params
 float blendFactor;
 
+inline float3 UnpackNormalDXT5nm(float4 packednormal)
+{
+    float3 normal;
+    normal.xy = packednormal.wy * 2 - 1;
+#if defined(SHADER_API_FLASH)
+    // Flash does not have efficient saturate(), and dot() seems to require an extra register.
+    normal.z = sqrt(1 - normal.x*normal.x - normal.y * normal.y);
+#else
+    normal.z = sqrt(1 - saturate(dot(normal.xy, normal.xy)));
+#endif
+    return normal;
+}
+
+inline float3 UnpackNormal(float4 packednormal)
+{
+#if (defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)) && defined(SHADER_API_MOBILE)
+    return packednormal.xyz * 2 - 1;
+#else
+    return UnpackNormalDXT5nm(packednormal);
+#endif
+}
+
 [numthreads(GROUP_SIZE, GROUP_SIZE, 1)]
 void BakeBlend (uint3 id : SV_DispatchThreadID)
 {
@@ -29,5 +51,6 @@ void BakeBlend (uint3 id : SV_DispatchThreadID)
     //get blended texture maps from blend amounts
     BlendedAlbedo[uv] = getColFromBlendAmounts(baseAlbedo[uv], tex1Albedo[uv], tex2Albedo[uv], tex3Albedo[uv], blendAmounts); //albedo
     BlendedHRMA[uv] = getColFromBlendAmounts(baseHRMA[uv], tex1HRMA[uv], tex2HRMA[uv], tex3HRMA[uv], blendAmounts); //height/metallic/roughness/AO
-    BlendedNormal[uv] = getColFromBlendAmounts(baseNormal[uv], tex1Normal[uv], tex2Normal[uv], tex3Normal[uv], blendAmounts); //normal
+    //TODO: fix normal map
+    BlendedNormal[uv] = UnpackNormal(getColFromBlendAmounts(baseNormal[uv], tex1Normal[uv], tex2Normal[uv], tex3Normal[uv], blendAmounts)); //normal
 }

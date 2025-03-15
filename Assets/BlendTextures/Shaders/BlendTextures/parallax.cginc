@@ -1,5 +1,4 @@
 #include "blends.cginc"
-
 //variant of Unity's ParallaxOffset function (from UnityCG.cginc) that implements offset limiting
 //by not dividing normalised viewDir.xy by viewDir.z, as per http://old.cescg.org/CESCG-2006/papers/TUBudapest-Premecz-Matyas.pdf
 float2 ParallaxOffsetLimited(half heightmapHeight, half parallaxHeight, half3 tangentViewDir)
@@ -39,7 +38,7 @@ float2 IterativeParallaxOffset(
 }
 
 float2 POM(
-	float fHeightMapScale,
+	float heightMapScale,
 	float3 tangentViewDir,
 	float sampleRatio,
 	float2 texcoord,
@@ -48,74 +47,69 @@ float2 POM(
 	float heightMapOffsets[4],
 	sampler2D blendTex,
 	float blendFactor,
-	int nMinSamples,
-	int nMaxSamples
+	int minSamples,
+	int maxSamples
 ) {
 
-	float fParallaxLimit = -length(tangentViewDir.xy) / tangentViewDir.z;
-	fParallaxLimit *= fHeightMapScale;
+	float parallaxLimit = -length(tangentViewDir.xy) / tangentViewDir.z;
+	parallaxLimit *= heightMapScale;
 
-	float2 vOffsetDir = normalize(tangentViewDir.xy);
-	float2 vMaxOffset = vOffsetDir * fParallaxLimit;
+	float2 offsetDir = normalize(tangentViewDir.xy);
+	float2 maxOffset = offsetDir * parallaxLimit;
 
-	int nNumSamples = (int)lerp(nMinSamples, nMaxSamples, saturate(sampleRatio));
+	int numSamples = (int)lerp(minSamples, maxSamples, saturate(sampleRatio));
 
-	float fStepSize = 1.0 / (float)nNumSamples;
+	float stepSize = 1.0 / (float)numSamples;
 
 	float2 dx = ddx(texcoord);
 	float2 dy = ddy(texcoord);
 
-	float fCurrRayHeight = 1.0;
-	float2 vCurrOffset = float2(0, 0);
-	float2 vLastOffset = float2(0, 0);
+	float currRayHeight = 1.0;
+	float2 currOffset = float2(0, 0);
+	float2 lastOffset = float2(0, 0);
 
-	float fLastSampledHeight = 1;
-	float fCurrSampledHeight = 1;
+	float lastSampledHeight = 1;
+	float currSampledHeight = 1;
 
-	int nCurrSample = 0;
+	int currSample = 0;
 
-	while (nCurrSample < nNumSamples)
+	while (currSample < numSamples)
 	{
-		float hBase = tex2Dgrad(heightMaps[0], texcoord + vCurrOffset, dx, dy).r;
-		float h1 = tex2Dgrad(heightMaps[1], texcoord + vCurrOffset, dx, dy).r;
-		float h2 = tex2Dgrad(heightMaps[2], texcoord + vCurrOffset, dx, dy).r;
-		float h3 = tex2Dgrad(heightMaps[3], texcoord + vCurrOffset, dx, dy).r;
-		half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, tex2Dgrad(blendTex, texcoord + vCurrOffset, dx, dy), blendFactor);
+		float hBase = tex2Dgrad(heightMaps[0], texcoord + currOffset, dx, dy).r;
+		float h1 = tex2Dgrad(heightMaps[1], texcoord + currOffset, dx, dy).r;
+		float h2 = tex2Dgrad(heightMaps[2], texcoord + currOffset, dx, dy).r;
+		float h3 = tex2Dgrad(heightMaps[3], texcoord + currOffset, dx, dy).r;
+		half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, tex2Dgrad(blendTex, texcoord + currOffset, dx, dy).rgb, blendFactor);
 
-		//get blended height based on height blend mode
-#if defined(_HEIGHTBLENDMODE_ADDTOBASE)
-		fCurrSampledHeight = pomGetBlendedHeightAddToBase(heightMaps, heightMapMults, heightMapOffsets, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
-#elif defined(_HEIGHTBLENDMODE_ADDALL)
-		fCurrSampledHeight = pomGetBlendedHeightAddAll(heightMaps, heightMapMults, heightMapOffsets, 4, texcoord + vCurrOffset, dx, dy).r;
-#else //blend all
-		fCurrSampledHeight = pomGetBlendedHeightBlendAll(heightMaps, heightMapMults, heightMapOffsets, 4, texcoord + vCurrOffset, dx, dy, blendAmounts).r;
-#endif 
+		//get blended height
+        float heights[4] = { hBase, h1, h2, h3 };
+        currSampledHeight = pomGetBlendedHeight(heights, 4, blendAmounts);
 
-		if (fCurrSampledHeight > fCurrRayHeight)
+		if (currSampledHeight > currRayHeight)
 		{
-			float delta1 = fCurrSampledHeight - fCurrRayHeight;
-			float delta2 = (fCurrRayHeight + fStepSize) - fLastSampledHeight;
+			float delta1 = currSampledHeight - currRayHeight;
+			float delta2 = (currRayHeight + stepSize) - lastSampledHeight;
 
 			float ratio = delta1 / (delta1 + delta2);
 
-			vCurrOffset = (ratio)*vLastOffset + (1.0 - ratio) * vCurrOffset;
+			currOffset = (ratio)*lastOffset + (1.0 - ratio) * currOffset;
 
-			nCurrSample = nNumSamples + 1;
+			currSample = numSamples + 1;
 		}
 		else
 		{
-			nCurrSample++;
+			currSample++;
 
-			fCurrRayHeight -= fStepSize;
+			currRayHeight -= stepSize;
 
-			vLastOffset = vCurrOffset;
-			vCurrOffset += fStepSize * vMaxOffset;
+			lastOffset = currOffset;
+			currOffset += stepSize * maxOffset;
 
-			fLastSampledHeight = fCurrSampledHeight;
+			lastSampledHeight = currSampledHeight;
 		}
 	}
 
-	return vCurrOffset;
+	return currOffset;
 }
 
 /*

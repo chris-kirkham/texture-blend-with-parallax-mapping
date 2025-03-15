@@ -112,6 +112,14 @@ half3 getColFromBlendAmounts(half3 cols[4], int numCols, half3 blendAmounts)
 	return c;
 }
 
+//TODO: implement properly
+//https://blog.selfshadow.com/publications/blending-in-detail/
+//https://gist.github.com/Farfarer/4761486
+half3 blendNormalMaps(half3 nBase, half3 n1, half3 n2, half3 n3, half3 blendAmounts)
+{
+    return normalize(getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts));
+}
+
 /*----getBlendedHeightBlendAll/pomGetBlendedHeightBlendAll----*/
 //getBlendedHeightBlendAll - function to get blended height with calculated blend amounts and specified UV coordinate
 //pomGetBlendedHeightBlendAll - gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
@@ -218,26 +226,26 @@ float getBlendedHeight(float heights[4], int numHmaps, half3 blendAmounts)
     return blendedHeight;
 }
 
-/*
-float pomGetBlendedHeightBlendAll
-(
-	sampler2D heightmapBase, float baseHMult,
-	sampler2D heightmap1, float h1Mult,
-	sampler2D heightmap2, float h2Mult,
-	sampler2D heightmap3, float h3Mult,
-	float2 uv,
-	float dx, float dy,
-	half3 blendAmounts
-)
+float pomGetBlendedHeight(float heights[4], int numHeights, half3 blendAmounts)
 {
-	float hBase = tex2Dgrad(heightmapBase, uv, dx, dy).r * baseHMult;
-	float h1 = tex2Dgrad(heightmap1, uv, dx, dy).r * h1Mult;
-	float h2 = tex2Dgrad(heightmap2, uv, dx, dy).r * h2Mult;
-	float h3 = tex2Dgrad(heightmap3, uv, dx, dy).r * h3Mult;
-	half bBase = 1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b);
-	return (hBase * bBase) + (h1 * blendAmounts.r) + (h2 * blendAmounts.g) + (h3 * blendAmounts.b);
+#if defined(_HEIGHTBLENDMODE_ADDTOBASE) || defined(_HEIGHTBLENDMODE_ADDALL)
+	float blendedHeight = heights[0];
+#else //_HEIGHTBLENDMODE_BLENDALL
+	float blendedHeight = heights[0] * (1 - (blendAmounts.r + blendAmounts.g + blendAmounts.b));
+#endif
+	
+	[unroll]
+    for (int i = 1; i < numHeights; i++)
+    {
+#if defined(_HEIGHTBLENDMODE_BLENDALL) || defined(_HEIGHTBLENDMODE_ADDTOBASE)
+		blendedHeight += heights[i] * blendAmounts[i - 1];
+#else //_HEIGHTBLENDMODE_ADDALL
+		blendedHeight += heights[i];
+#endif
+    }
+	
+    return blendedHeight;
 }
-*/
 
 //gets blended height using tex2Dgrad and partial derivatives dx and dy, to avoid "unable to unroll loop..." 
 float pomGetBlendedHeightBlendAll(sampler2D hmaps[4], float hmapMults[4], float hmapOffsets[4], int numHmaps, float2 uv, float dx, float dy, half3 blendAmounts)

@@ -135,7 +135,6 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 
 			void surf(Input IN, inout SurfaceOutputStandard o) {
 				float2 uv = IN.uv_BaseTex;
-
 				//need to use the initial (non-parallax-offset) uv for the height; r/m/ao uses parallax uv
 				float hBase = getAdjustedHeight(tex2D(_BaseTexHRMA, uv).r, _BaseTexHeightMult, _BaseHeightOffset);
 				float h1 = getAdjustedHeight(tex2D(_Tex1HRMA, uv).r, _H1Mult, _H1Offset);
@@ -149,7 +148,7 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 				half3 blendTex = tex2D(_BlendTex, uv).rgb;
 				half3 blendAmounts = getBlendAmounts(hBase, h1, h2, h3, blendTex, _HeightBlendFactor);
 
-				/* get other textures using parallax-mapped UVs */
+				//get other textures using parallax-mapped UVs 
 				half4 cBase = tex2D(_BaseTex, uv) * _BaseTexColour;
 				half4 c1 = tex2D(_MainTex1, uv) * _Tex1Colour;
 				half4 c2 = tex2D(_MainTex2, uv) * _Tex2Colour;
@@ -168,7 +167,7 @@ Shader "BlendTextures/BlendTextures_Tessellated" {
 				half3 rma3 = tex2D(_Tex3HRMA, uv).gba;
 
 				o.Albedo = getColFromBlendAmounts(cBase, c1, c2, c3, blendAmounts);
-				//o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
+				o.Normal = getColFromBlendAmounts(nBase, n1, n2, n3, blendAmounts);
 				o.Smoothness = getColFromBlendAmounts(1 - rmaBase.r, 1 - rma1.r, 1 - rma2.r, 1 - rma3.r, blendAmounts);
 				o.Metallic = getColFromBlendAmounts(rmaBase.g, rma1.g, rma2.g, rma3.g, blendAmounts);
 				o.Occlusion = (getColFromBlendAmounts(rmaBase.b, rma1.b, rma2.b, rma3.b, blendAmounts) * _AOStrength) + (1 - _AOStrength);

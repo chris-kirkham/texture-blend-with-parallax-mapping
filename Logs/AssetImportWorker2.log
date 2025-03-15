@@ -9,11 +9,11 @@ C:\Program Files\Unity\Hub\Editor\6000.0.34f1\Editor\Unity.exe
 -batchMode
 -noUpm
 -name
-AssetImportWorker0
+AssetImportWorker2
 -projectPath
 C:/Users/Chris/Unity Projects/texture-blend-with-parallax-mapping
 -logFile
-Logs/AssetImportWorker0.log
+Logs/AssetImportWorker2.log
 -srvPort
 65377
 -job-worker-count
@@ -59,10 +59,7 @@ C:/Users/Chris/Unity Projects/texture-blend-with-parallax-mapping
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gi-baking-worker=262144"
     "memorysetup-temp-allocator-size-gfx=262144"
-Player connection [21548]  Target information:
+Player connection [14604]  Target information:
 
-Player connection [21548]  * "[IP] 192.168.0.15 [Port] 0 [Flags] 2 [Guid] 1387902095 [EditorId] 1387902095 [Version] 1048832 [Id] WindowsEditor(7,LAPTOP-CCSOUTHC) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [14604]  * "[IP] 192.168.0.15 [Port] 0 [Flags] 2 [Guid] 1028811568 [EditorId] 1028811568 [Version] 1048832 [Id] WindowsEditor(7,LAPTOP-CCSOUTHC) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [21548] Host joined multi-casting on [225.0.0.222:54997]...
-Player connection [21548] Host joined alternative multi-casting on [225.0.0.222:34997]...
-JobSystem: Creating JobQueue using job-worker-count value 7
